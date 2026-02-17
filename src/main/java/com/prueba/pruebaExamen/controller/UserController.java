@@ -5,6 +5,7 @@ import com.prueba.pruebaExamen.dto.UserRs;
 import com.prueba.pruebaExamen.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,16 +28,16 @@ public class UserController {
      */
     @PostMapping
     public ResponseEntity<UserRs> create(@RequestBody @Valid UserRq request) {
-        return ResponseEntity.status(201).body(service.userCreate(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
     }
 
     /**
      * Obtiene un usuario específico por su identificador único (UUID).
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable UUID id) {
+    public ResponseEntity<?> findById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(service.getUsers(id));
+        return ResponseEntity.ok(service.findById(id));
     }
 
     /**
@@ -44,7 +45,8 @@ public class UserController {
      */
     @GetMapping
     public ResponseEntity<List<UserRs>> getAllUsers() {
-        return ResponseEntity.ok(service.getAllUsers());
+
+        return ResponseEntity.ok(service.findAll());
     }
 
     /**

@@ -19,20 +19,20 @@ public interface UserService {
      * @param request Objeto con los datos de entrada validados.
      * @return DTO de respuesta con los datos procesados.
      */
-    UserRs userCreate(@NonNull UserRq request);
+    UserRs create(@NonNull UserRq request);
 
     /**
      * Define la operación para recuperar el catálogo completo de usuarios.
      * @return List de UserRs.
      */
-    List<UserRs> getAllUsers();
+    List<UserRs> findAll();
 
     /**
      * Define la búsqueda de un recurso específico mediante su identificador único.
      * @param id Identificador de tipo UUID.
      * @return DTO con la información del usuario encontrado.
      */
-    UserRs getUsers(UUID id);
+    UserRs findById(UUID id);
 
     /**
      * Define la operación de actualización de datos de un usuario existente.

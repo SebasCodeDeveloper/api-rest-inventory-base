@@ -1,10 +1,10 @@
 package com.prueba.pruebaExamen.service.impl;
 
+import com.prueba.pruebaExamen.dto.UserRq;
+import com.prueba.pruebaExamen.dto.UserRs;
 import com.prueba.pruebaExamen.entity.User;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
 import com.prueba.pruebaExamen.exception.UserException;
-import com.prueba.pruebaExamen.dto.UserRq;
-import com.prueba.pruebaExamen.dto.UserRs;
 import com.prueba.pruebaExamen.repository.UserRepository;
 import com.prueba.pruebaExamen.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -28,15 +28,15 @@ public class UserServiceImpl implements UserService {
      * Procesa la creación de un nuevo usuario con validación de unicidad de email.
      */
     @Override
-    public UserRs userCreate(@NonNull UserRq request) {
+    public UserRs create(@NonNull UserRq request) {
 
-        // Regla de Negocio: Garantizar que el correo no esté duplicado en el sistema
+        // Garantizar que el correo no esté duplicado en el sistema
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException(request.getEmail() +
                     " El usuario ya esta registrado", BusinessErrorType.EMAIL_IN_USE);
         }
 
-        // Mapeo manual: Convierte el DTO de entrada a la Entidad JPA
+        //Convierte el DTO de entrada a la Entidad JPA
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
      * Recupera todos los usuarios y valida que la lista no sea vacía.
      */
     @Override
-    public List<UserRs> getAllUsers() {
+    public List<UserRs> findAll() {
         List<User> users = userRepository.findAll();
 
         // Si el repositorio no retorna datos, se lanza una excepción controlada
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
      * Busca un usuario mediante su identificador técnico (UUID).
      */
     @Override
-    public UserRs getUsers(UUID id) {
+    public UserRs findById(UUID id) {
         return userRepository.findById(id)
                 .map(this::toRs)
                 .orElseThrow(() -> new UserException(
@@ -100,7 +100,7 @@ public class UserServiceImpl implements UserService {
                         BusinessErrorType.NOT_FOUND
                 ));
 
-        // Validación de conflicto: Si cambia el email, este no debe existir en otro registro
+        //Si cambia el email, este no debe existir en otro registro
         if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
             throw new UserException(
                     "El email " + request.getEmail() + " ya pertenece a otro usuario",

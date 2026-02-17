@@ -10,18 +10,24 @@ import com.prueba.pruebaExamen.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Lógica de negocio para la gestión de productos.
+ * Implementa el desacoplamiento entre controladores y persistencia.
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
+    /**
+     * Procesa la creación de un nuevo producto con validación de unicidad de nombre.
+     */
     @Override
-    public ProductRs productCreate(ProductRq request) {
+    public ProductRs create(ProductRq request) {
 
         //Garantizar que el nombre no esté duplicado en el sistema
         if (productRepository.findByName(request.getName()).isPresent()) {
@@ -29,7 +35,7 @@ public class ProductServiceImpl implements ProductService {
                     "El producto " + request.getName() + " ya está registrado", BusinessErrorType.CONFLICT);
         }
 
-        // Mapeo manual: Convierte el DTO de entrada a la Entidad JPA
+        //Convierte el DTO de entrada a la Entidad JPA
         Product product = new Product();
         product.setName(request.getName());
         product.setPrice(request.getPrice());
@@ -40,12 +46,17 @@ public class ProductServiceImpl implements ProductService {
         return toRs(produtSaved);
     }
 
+    /**
+     * Recupera todos los productos y valida que la lista no sea vacía.
+     */
     @Override
-    public List<ProductRs> getAllProducts() {
+    public List<ProductRs> findAll() {
         List<Product> products = productRepository.findAll();
 
+        // Si el repositorio no retorna datos, se lanza una excepción controlada
         if (productRepository.findAll().isEmpty()) {
-            throw new ProductException("No se encontraron producto registrados en el sistema", BusinessErrorType.NOT_FOUND);
+            throw new ProductException("No se encontraron producto registrados en el sistema",
+                    BusinessErrorType.NOT_FOUND);
         }
 
         return products.stream()
@@ -53,8 +64,11 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca un producto mediante su identificador técnico (UUID).
+     */
     @Override
-    public ProductRs getUser(UUID id) {
+    public ProductRs findById(UUID id) {
 
         return productRepository.findById(id)
                 .map(this::toRs)
@@ -63,20 +77,35 @@ public class ProductServiceImpl implements ProductService {
                 ));
     }
 
+    /**
+     * Realiza el borrado físico del registro tras validar su existencia.
+     */
     @Override
-    public ProductRs updatProduct(UUID id, ProductRq request) {
+    public void delete(UUID id) {
+        Product product = productRepository.findById(id).
+                orElseThrow(() -> new ProductException("El producto  no existe", BusinessErrorType.NOT_FOUND));
+        productRepository.delete(product);
 
+    }
+
+    /**
+     * Actualiza un producto existente, permitiendo cambios de productos con validación de conflictos.
+     */
+    @Override
+    public ProductRs update(UUID id, ProductRq request) {
+
+        // Verifica existencia previa del recurso
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException(
                         "Producto no existente ", BusinessErrorType.NOT_FOUND
                 ));
-
+        //Si cambia el nombre, este no debe existir en la tabla
         if (!product.getName().equals(request.getName()) && productRepository.findByName(request.getName()).isPresent()) {
             throw new ProductException(
                     "El email " + request.getName() + " ya pertenece a otro usuario",
                     BusinessErrorType.CONFLICT
             );
-    }
+        }
 
         product.setName(request.getName());
         product.setPrice(request.getPrice());
@@ -84,8 +113,11 @@ public class ProductServiceImpl implements ProductService {
 
         Product produtSaved = productRepository.save(product);
         return toRs(produtSaved);
-}
+    }
 
+    /**
+     * Mapper privado para transformar Entidad (JPA) a DTO de Respuesta (PR).
+     */
     private ProductRs toRs(Product product) {
         ProductRs pr = new ProductRs();
         pr.setName(product.getName());
