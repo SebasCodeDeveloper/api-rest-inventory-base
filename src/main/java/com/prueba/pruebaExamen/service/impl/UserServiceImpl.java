@@ -1,11 +1,12 @@
-package com.prueba.pruebaExamen.service;
+package com.prueba.pruebaExamen.service.impl;
 
 import com.prueba.pruebaExamen.entity.User;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
-import com.prueba.pruebaExamen.exception.UserNotFoundException;
+import com.prueba.pruebaExamen.exception.UserException;
 import com.prueba.pruebaExamen.dto.UserRq;
 import com.prueba.pruebaExamen.dto.UserRs;
 import com.prueba.pruebaExamen.repository.UserRepository;
+import com.prueba.pruebaExamen.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
     private final UserRepository userRepository;
 
     /**
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
         // Regla de Negocio: Garantizar que el correo no esté duplicado en el sistema
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserNotFoundException(request.getEmail() +
+            throw new UserException(request.getEmail() +
                     " El usuario ya esta registrado", BusinessErrorType.EMAIL_IN_USE);
         }
 
@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
 
         // Si el repositorio no retorna datos, se lanza una excepción controlada
         if (users.isEmpty()) {
-            throw new UserNotFoundException("No se encontraron usuarios registrados en el sistema",
+            throw new UserException("No se encontraron usuarios registrados en el sistema",
                     BusinessErrorType.NOT_FOUND);
         }
 
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
     public UserRs getUsers(UUID id) {
         return userRepository.findById(id)
                 .map(this::toRs)
-                .orElseThrow(() -> new UserNotFoundException(
+                .orElseThrow(() -> new UserException(
                         "Usuario no existente en base de datos ", BusinessErrorType.NOT_FOUND
                 ));
     }
@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(UUID id) {
         User user =  userRepository.findById(id)
-                .orElseThrow(() -> new  UserNotFoundException("El usuario no existe",  BusinessErrorType.NOT_FOUND));
+                .orElseThrow(() -> new  UserException("El usuario no existe",  BusinessErrorType.NOT_FOUND));
         userRepository.delete(user);
     }
 
@@ -95,14 +95,14 @@ public class UserServiceImpl implements UserService {
 
         // Verifica existencia previa del recurso
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(
+                .orElseThrow(() -> new UserException(
                         "El usuario no existe",
                         BusinessErrorType.NOT_FOUND
                 ));
 
         // Validación de conflicto: Si cambia el email, este no debe existir en otro registro
         if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
-            throw new UserNotFoundException(
+            throw new UserException(
                     "El email " + request.getEmail() + " ya pertenece a otro usuario",
                     BusinessErrorType.EMAIL_IN_USE
             );

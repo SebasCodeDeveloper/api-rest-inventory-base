@@ -35,6 +35,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable UUID id) {
+
         return ResponseEntity.ok(service.getUsers(id));
     }
 

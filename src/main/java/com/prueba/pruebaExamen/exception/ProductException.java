@@ -7,8 +7,9 @@
      * Centraliza los fallos de lógica de negocio para ser capturados por el GlobalExceptionHandler.
      */
     @Getter
-    public class ProductNotFoundException extends BaseBusinessException {
-        public ProductNotFoundException(String message, BusinessErrorType type) {
+    public class ProductException extends BaseBusinessException {
+        public ProductException(String message, BusinessErrorType type) {
+
             super(message, type);
         }
 

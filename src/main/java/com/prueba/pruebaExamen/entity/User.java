@@ -55,7 +55,7 @@
          * Un usuario puede tener muchas órdenes.
          * El 'mappedBy' debe coincidir con el nombre del campo en la entidad Order.
          */
-        // ✅ IMPORTANTE: Debe ser una List
+
         @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
         private List<Order> orders = new ArrayList<>();
 

@@ -7,8 +7,8 @@ import lombok.Getter;
  * Extiende de RuntimeException para permitir el manejo de excepciones no comprobadas.
  */
 @Getter
-public class UserNotFoundException extends BaseBusinessException {
-        public UserNotFoundException(String message, BusinessErrorType type) {
+public class UserException extends BaseBusinessException {
+        public UserException(String message, BusinessErrorType type) {
 
             super(message, type);
         }
