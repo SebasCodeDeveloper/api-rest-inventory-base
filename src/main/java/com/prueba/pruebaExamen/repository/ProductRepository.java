@@ -9,6 +9,7 @@ import java.util.UUID;
 
 /**
  * Capa de acceso a datos (DAO) para la entidad Product.
+ * Al extender JpaRepository, hereda automáticamente métodos como save(), delete() y findAll().
  */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {

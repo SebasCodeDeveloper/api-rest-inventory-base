@@ -7,6 +7,7 @@ import java.util.UUID;
 
 /**
  * Capa de acceso a datos (DAO) para la entidad OrderDetail.
+ * Al extender JpaRepository, hereda automáticamente métodos como save(), delete() y findAll().
  */
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, UUID> {
 

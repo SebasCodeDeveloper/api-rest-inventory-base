@@ -18,6 +18,11 @@ import lombok.NoArgsConstructor;
 public class ProductRq {
 
     /**
+     * Identificador opcional para operaciones de actualización.
+     */
+    private String id;
+
+    /**
      * Nombre descriptivo del producto. No puede estar vacío ni ser nulo.
      */
     @NotBlank(message = "El nombre es obligatorio")
