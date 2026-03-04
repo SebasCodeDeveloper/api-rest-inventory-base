@@ -1,13 +1,13 @@
 package com.prueba.pruebaExamen.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -41,7 +41,7 @@ public class Product {
      */
 
     @Column(nullable = false)
-    private Integer price;
+    private BigDecimal price;
 
     /**
      * Cantidad disponible en inventario.

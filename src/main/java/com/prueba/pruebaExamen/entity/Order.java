@@ -6,10 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -44,18 +45,19 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> details = new ArrayList<>();
+
     /**
      * Monto total de la orden.
      */
     @Column(nullable = false)
-    private Integer total;
+    private BigDecimal total = BigDecimal.ZERO;
 
     /**
      * Estado actual del pedido manejado por un Enum para asegurar consistencia.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status;
+    private OrderStatus status;
 
     /**
      * Fecha de creación del registro. No se puede actualizar una vez creada.
@@ -70,25 +72,28 @@ public class Order {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         if (this.status == null) {
-            this.status = Status.CREATED; // Estado inicial por defecto
+            this.status = OrderStatus.CREATED; // Estado inicial por defecto
         }
     }
-
-    /**
-     * Estados posibles de una orden para evitar entradas de texto inválidas.
-     */
-    public enum Status {
-        CREATED, PAID, CANCELLED
-    }
-
-    // Agrega esto dentro de tu clase Order.java
 
     /**
      * Calcula el total sumando los subtotales de todos los detalles.
      */
     public void calculateTotal() {
         this.total = this.details.stream()
-                .mapToInt(OrderDetail::getSubtotal)
-                .sum();
+                .map(OrderDetail::getSubtotal)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    /**
+     * Establece el vínculo bidireccional entre la orden principal y un nuevo desglose de producto.
+     * El procedimiento asigna la referencia de la orden actual al detalle recibido y lo integra
+     * en el listado de componentes de la transacción.
+     */
+    public void addDetail(OrderDetail detail) {
+        detail.setOrder(this);
+        this.details.add(detail);
+    }
+
 }
