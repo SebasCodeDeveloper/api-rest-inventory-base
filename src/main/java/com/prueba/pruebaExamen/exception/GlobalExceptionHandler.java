@@ -64,8 +64,8 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of(
-                        "status", HttpStatus.BAD_REQUEST.value(),
-                        "error", "Validation Error",
+                         HttpStatus.BAD_REQUEST.value(),
+                         "Validation Error",
                         "message", errors
                 ));
     }

@@ -10,6 +10,7 @@ import com.prueba.pruebaExamen.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,16 +31,16 @@ public class ProductServiceImpl implements ProductService {
     public ProductRs create(ProductRq request) {
 
         //Garantizar que el nombre no esté duplicado en el sistema
-        if (productRepository.findByName(request.getName()).isPresent()) {
+        if (productRepository.findByName(request.name()).isPresent()) {
             throw new ProductException(
-                    "El producto " + request.getName() + " ya está registrado", BusinessErrorType.CONFLICT);
+                    "El producto " + request.name() + " ya está registrado", BusinessErrorType.CONFLICT);
         }
 
         //Convierte el DTO de entrada a la Entidad JPA
         Product product = new Product();
-        product.setName(request.getName());
-        product.setPrice(request.getPrice());
-        product.setStock(request.getStock());
+        product.setName(request.name());
+        product.setPrice(BigDecimal.valueOf(request.price()));
+        product.setStock(request.stock());
 
         Product produtSaved = productRepository.save(product);
 
@@ -99,17 +100,18 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ProductException(
                         "Producto no existente ", BusinessErrorType.NOT_FOUND
                 ));
+
         //Si cambia el nombre, este no debe existir en la tabla
-        if (!product.getName().equals(request.getName()) && productRepository.findByName(request.getName()).isPresent()) {
+        if (!product.getName().equals(request.name()) && productRepository.findByName(request.name()).isPresent()) {
             throw new ProductException(
-                    "El email " + request.getName() + " ya pertenece a otro usuario",
+                    "El nombre  " + request.name() + " ya pertenece a otro producto",
                     BusinessErrorType.CONFLICT
             );
         }
 
-        product.setName(request.getName());
-        product.setPrice(request.getPrice());
-        product.setStock(request.getStock());
+        product.setName(request.name());
+        product.setPrice(BigDecimal.valueOf(request.price()));
+        product.setStock(request.stock());
 
         Product produtSaved = productRepository.save(product);
         return toRs(produtSaved);
@@ -119,11 +121,10 @@ public class ProductServiceImpl implements ProductService {
      * Mapper privado para transformar Entidad (JPA) a DTO de Respuesta (PR).
      */
     private ProductRs toRs(Product product) {
-        ProductRs pr = new ProductRs();
-        pr.setName(product.getName());
-        pr.setPrice(product.getPrice());
-        pr.setStock(product.getStock());
-
-        return pr;
+        return new ProductRs(
+                product.getName(),
+                product.getPrice(),
+                product.getStock()
+        );
     }
 }
