@@ -3,6 +3,7 @@ package com.prueba.pruebaExamen.service.impl;
 import com.prueba.pruebaExamen.dto.*;
 import com.prueba.pruebaExamen.entity.*;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
+import com.prueba.pruebaExamen.exception.OrderDetailException;
 import com.prueba.pruebaExamen.exception.OrderException;
 import com.prueba.pruebaExamen.repository.OrderRepository;
 import com.prueba.pruebaExamen.repository.ProductRepository;
@@ -15,12 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
- * Implementación del servicio de órdenes.
- * Maneja la creación, obtención, pago y cancelación de órdenes.
- * Utiliza transacciones para mantener la consistencia de datos.
+ * Lógica de negocio para la gestión integral de órdenes de compra.
+ * Coordina la interacción entre usuarios, productos y la persistencia de transacciones,
+ * asegurando la integridad del inventario y el flujo de estados de la orden.
  */
 @Service
 @Transactional
@@ -31,86 +31,83 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
 
+    /**
+     * Procesa la creación de una orden, validando stock y calculando importes financieros.
+     * Realiza el descuento automático de inventario por cada producto solicitado.
+     */
     @Override
-    public OrderRs create(OrderRq request) {
+    public OrderReportRs create(OrderRq request) {
 
-        // Verificar si el usuario existe
+        // Validación de existencia del cliente mediante su correo electrónico
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new OrderException("Usuario no encontrado con el email proporcionado",
                         BusinessErrorType.NOT_FOUND));
 
-        // Crear nueva orden y asociarla al usuario
+        // Instanciación de la cabecera de la orden vinculada al usuario
         Order order = new Order();
         order.setUser(user);
 
-        // Recorrer los productos solicitados en la orden
+        // Procesamiento iterativo de los ítems solicitados
         for (OrderDetailRq item : request.items()) {
 
-            // Buscar producto por ID
+            // Verificación de existencia del producto en catálogo
             Product product = productRepository.findById(item.productId())
                     .orElseThrow(() -> new OrderException("Producto no encontrado", BusinessErrorType.NOT_FOUND));
 
-            // Validar que haya suficiente stock
+            // Control de disponibilidad física en inventario
             if (product.getStock() < item.quantity()) {
-                throw new OrderException("Stock insuficiente para el producto: " + product.getName(), BusinessErrorType.UNPROCESSABLE);
+                throw new OrderException("Stock insuficiente para el producto: " + product.getName(),
+                        BusinessErrorType.UNPROCESSABLE);
             }
 
-            // Calcular subtotal del producto (precio * cantidad)
+            // Cálculo dinámico del subtotal y actualización de stock
             BigDecimal subtotal = product.getPrice()
                     .multiply(BigDecimal.valueOf(item.quantity()));
 
-            // Descontar el stock del producto
             product.setStock(product.getStock() - item.quantity());
 
-            // Crear detalle de la orden
+            // Construcción del detalle de la transacción
             OrderDetail detail = new OrderDetail();
             detail.setProduct(product);
             detail.setQuantity(item.quantity());
             detail.setUnitPrice(product.getPrice());
             detail.setSubtotal(subtotal);
 
-            // Agregar detalle a la orden
+            // Vinculación bidireccional entre la orden y su detalle
             order.addDetail(detail);
         }
 
-        // Calcular total de la orden sumando los subtotales
+        // Ejecución de lógica de negocio para consolidar el total de la compra
         order.calculateTotal();
 
-        // Guardar la orden en la base de datos
+        // Persistencia de la orden y retorno del DTO de respuesta
         Order savedOrder = orderRepository.save(order);
-
         return mapToResponse(savedOrder);
     }
 
-
-    //buscar onda orden por id
+    /**
+     * Localiza una orden específica empleando su identificador único UUID.
+     */
     @Override
     @Transactional(readOnly = true)
-    public OrderRs getById(UUID id) {
+    public OrderReportRs getById(UUID id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() ->
-                        new OrderException("Orden no encontrada",
-                                BusinessErrorType.NOT_FOUND));
+                .orElseThrow(() -> new OrderException("La orden solicitada no existe",
+                        BusinessErrorType.NOT_FOUND));
         return mapToResponse(order);
     }
 
-    //buscar una orden por email
+    /**
+     * Recupera el historial de órdenes asociadas a una cuenta de correo electrónico.
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<OrderRs> getByEmail(GetOrderByEmailRq request) {
-
-        if (request.getEmail() == null) {
-            throw new OrderException("Email es requerido",
-                    BusinessErrorType.BAD_REQUEST);
-        }
-
+    public List<OrderReportRs> getByEmail(GetOrderByEmailRq request) {
         List<Order> orders = orderRepository.findByUserEmail(request.getEmail());
 
         if (orders.isEmpty()) {
-            throw new OrderException(
-                    "No existen órdenes para el email proporcionado",
-                    BusinessErrorType.NOT_FOUND
-            );
+            throw new OrderException("No se encontraron registros de órdenes para el email: " + request.getEmail(),
+                    BusinessErrorType.NOT_FOUND);
         }
 
         return orders.stream()
@@ -118,79 +115,120 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
-
+    /**
+     * Obtiene el listado completo de órdenes procesadas en el sistema.
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<OrderRs> getAll() {
-        // Obtener todas las órdenes y mapearlas a DTO
-        return orderRepository.findAll()
-                .stream()
+    public List<OrderReportRs> getAll() {
+        List<Order> orders = orderRepository.findAll();
+
+        if (orders.isEmpty()) {
+            throw new OrderDetailException("No existen registros de órdenes en la base de datos",
+                    BusinessErrorType.NOT_FOUND);
+        }
+
+        return orders.stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
+    /**
+     * Realiza la transición de estado de una orden a 'PAID' (Pagada).
+     * Valida que el estado actual permita completar la transacción financiera.
+     */
     @Override
-    public OrderRs pay(UUID id) {
-        // Buscar orden por ID
+    public OrderReportRs pay(UUID id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderException("Orden no encontrada", BusinessErrorType.NOT_FOUND));
 
-        //Validar si la orden esta en estado paid
+        // Verificación de idempotencia (no pagar dos veces)
         if (order.getStatus() == OrderStatus.PAID) {
-            throw new OrderException("Esta orden ya está pagada", BusinessErrorType.UNPROCESSABLE);
+            throw new OrderException("La transacción ya ha sido completada previamente",
+                    BusinessErrorType.UNPROCESSABLE);
         }
 
-        // Validar que solo órdenes en estado CREATED puedan pagarse
+        // Restricción de flujo: Solo se paga lo que ha sido creado recientemente
         if (order.getStatus() != OrderStatus.CREATED) {
-            throw new OrderException("Solo órdenes en estado CREATED se pueden pagar", BusinessErrorType.UNPROCESSABLE);
+            throw new OrderException("El estado actual de la orden no permite procesar el pago",
+                    BusinessErrorType.UNPROCESSABLE);
         }
 
-        // Cambiar estado de la orden a PAID
         order.setStatus(OrderStatus.PAID);
-
         return mapToResponse(order);
     }
 
+    /**
+     * Ejecuta la anulación de una orden y realiza la reversión de stock al inventario.
+     */
     @Override
-    public OrderRs cancel(UUID id) {
-        // Buscar orden por ID
+    public OrderReportRs cancel(UUID id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderException("Orden no encontrada", BusinessErrorType.NOT_FOUND));
 
-        // Si la orden NO está en estado inicial, lanzamos la excepción de inmediato
+        // Control de estados para evitar cancelaciones de órdenes pagadas o ya anuladas
         if (order.getStatus() != OrderStatus.CREATED) {
-            String mensaje = (order.getStatus() == OrderStatus.PAID) ? "No se puede cancelar una orden pagada" :
-                    (order.getStatus() == OrderStatus.CANCELLED) ? "Esta orden ya está cancelada" :
-                            "No se puede cancelar una orden en proceso";
+            String mensaje = (order.getStatus() == OrderStatus.PAID) ? "No es posible cancelar una transacción ya pagada" :
+                    (order.getStatus() == OrderStatus.CANCELLED) ? "La orden ya se encuentra en estado cancelado" :
+                            "Operación no permitida para el estado actual de la orden";
 
             throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);
         }
 
-        // Devolver el stock de los productos al inventario
+        // Procedimiento de devolución de stock físico al catálogo de productos
         for (OrderDetail detail : order.getDetails()) {
             Product product = detail.getProduct();
             product.setStock(product.getStock() + detail.getQuantity());
         }
 
-        // Cambiar estado de la orden a CANCELLED
         order.setStatus(OrderStatus.CANCELLED);
-
         return mapToResponse(order);
     }
 
-    private OrderRs mapToResponse(Order order) {
-        // Convertimos la lista de entidades Detail a lista de DTOs DetailRs
-        List<OrderDetailRs> detailList = order.getDetails().stream()
-                .map(detail -> new OrderDetailRs(
+    /**
+     * Realiza el borrado de la orden y devolviendo los productos a su posicion  anterios .
+     */
+    @Override
+    public void delete(UUID id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderException("Orden no encontrada", BusinessErrorType.NOT_FOUND));
+
+        // Control de estados para evitar cancelaciones de órdenes pagadas o ya anuladas
+        if (order.getStatus() != OrderStatus.CREATED) {
+            String mensaje = (order.getStatus() == OrderStatus.PAID) ? "No es posible eliminar  una orden ya pagada" :
+                    (order.getStatus() == OrderStatus.CANCELLED) ? "La orden ya se encuentra en estado cancelado" :
+                            "Operación no permitida para el estado actual de la orden";
+
+            throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);
+        }
+
+        // Procedimiento de devolución de stock físico al catálogo de productos
+        for (OrderDetail detail : order.getDetails()) {
+            Product product = detail.getProduct();
+            product.setStock(product.getStock() + detail.getQuantity());
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        orderRepository.delete(order);
+    }
+
+
+    /**
+     * Mapeador interno para transformar la entidad Order y sus detalles a una respuesta DTO jerárquica.
+     */
+    private OrderReportRs mapToResponse(Order order) {
+        // Transformación funcional de la lista de detalles de la entidad a DTOs de respuesta
+        List<ProductItemRs> detailList = order.getDetails().stream()
+                .map(detail -> new ProductItemRs(
                         detail.getProduct().getName(),
                         detail.getQuantity(),
                         detail.getUnitPrice(),
                         detail.getSubtotal()
                 ))
-                .toList(); // En Java 16+ usa .toList(), es más limpio que .collect(Collectors.toList())
+                .toList();
 
-        // Retornamos el DTO de la orden
-        return new OrderRs(
+        return new OrderReportRs(
                 order.getId(),
                 order.getUser().getEmail(),
                 order.getStatus(),
@@ -199,6 +237,4 @@ public class OrderServiceImpl implements OrderService {
                 detailList
         );
     }
-
-
 }

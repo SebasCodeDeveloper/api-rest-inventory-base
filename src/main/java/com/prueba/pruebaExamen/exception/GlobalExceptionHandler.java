@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = switch (ex.getType()) {
             case NOT_FOUND -> HttpStatus.NOT_FOUND;
             case CONFLICT, EMAIL_IN_USE -> HttpStatus.CONFLICT;
-            case UNPROCESSABLE -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case UNPROCESSABLE -> HttpStatus.UNPROCESSABLE_CONTENT;
             case UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
             case NO_CONTENT -> HttpStatus.NO_CONTENT;
             case INTERNAL_SERVER -> HttpStatus.INTERNAL_SERVER_ERROR;
