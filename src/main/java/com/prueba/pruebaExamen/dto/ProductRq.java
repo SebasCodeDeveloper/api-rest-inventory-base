@@ -24,14 +24,14 @@ public record ProductRq(
         @NotBlank(message = "El nombre es obligatorio")
          String name,
 
-/**
+        /**
          * Precio de venta. Se valida que sea un valor estrictamente positivo (> 0).
          */
         @NotNull(message = "El precio es obligatorio")
         @Positive(message = "El precio debe ser mayor a 0")
          Integer price,
 
-/**
+        /**
          * Cantidad disponible. Se permite 0 (sin stock), pero no valores negativos.
          */
         @NotNull(message = "El stock es obligatorio")
