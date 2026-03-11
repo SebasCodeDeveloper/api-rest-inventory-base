@@ -10,6 +10,7 @@ import com.prueba.pruebaExamen.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -81,10 +82,18 @@ public class UserServiceImpl implements UserService {
      * Realiza el borrado físico del registro tras validar su existencia.
      */
     @Override
+    @Transactional
     public void delete(UUID id) {
+        //Buscamos el usuario o lanzamos excepción si no existe
         User user =  userRepository.findById(id)
                 .orElseThrow(() -> new  UserException("El usuario no existe",  BusinessErrorType.NOT_FOUND));
         userRepository.delete(user);
+
+        //Validacion del usuario si tiene órdenes asociadas
+        if (!user.getOrders().isEmpty()) {
+            throw new UserException("No se puede eliminar este usuario por que tienes ordenes realizadas.",
+                    BusinessErrorType.CONFLICT);
+        }
     }
 
     /**
