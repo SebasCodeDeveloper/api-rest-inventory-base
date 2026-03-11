@@ -5,10 +5,12 @@ import com.prueba.pruebaExamen.dto.ProductRs;
 import com.prueba.pruebaExamen.entity.Product;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
 import com.prueba.pruebaExamen.exception.ProductException;
+import com.prueba.pruebaExamen.exception.UserException;
 import com.prueba.pruebaExamen.repository.ProductRepository;
 import com.prueba.pruebaExamen.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -82,10 +84,16 @@ public class ProductServiceImpl implements ProductService {
      * Realiza el borrado físico del registro tras validar su existencia.
      */
     @Override
+    @Transactional
     public void delete(UUID id) {
         Product product = productRepository.findById(id).
                 orElseThrow(() -> new ProductException("El producto  no existe", BusinessErrorType.NOT_FOUND));
         productRepository.delete(product);
+
+        if (!product.getOrderDetails().isEmpty()) {
+            throw new ProductException( "No se puede eliminar este producto por que tienes ordenes realizadas.",
+                    BusinessErrorType.CONFLICT);
+        }
 
     }
 
