@@ -8,6 +8,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -49,5 +51,14 @@ public class Product {
 
     @Column(nullable = false)
     private Integer stock;
+
+    /**
+     * Relación OneToMany.
+     * Una orden  puede tener muchas productos.
+     * FetchType para traer los pedidos desde el servico
+     */
+    // Añade esto dentro de tu clase Product
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<OrderDetail> orderDetails = new ArrayList<>();
 
 }
