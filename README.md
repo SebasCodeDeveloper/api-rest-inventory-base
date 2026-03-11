@@ -1,72 +1,301 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/spring/spring-original.svg" width="80px" />
-  <h1>📦 Inventory & Order Management System  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif"></h1>
- <p align="center">
+
+  <h1>📦 Advanced Inventory & Order System 
+    <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+  </h1>
+	
+ <p>
+	 
   <img src="https://media.giphy.com/media/QssGEmpkyEOhBCb7e1/giphy.gif" width="100"/>
 </p>
-  <p><strong>Desarrollo de API REST con Enfoque en Integridad Referencial y QA</strong></p>
- 
 
-  <img src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
+
+  <p><strong>Backend Architecture with Spring Boot • DTOs • Business Rules • Exception Handling</strong></p>
+
+  <img src="https://img.shields.io/badge/Java-17_/_21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
   <img src="https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
-  <img src="https://img.shields.io/badge/Hibernate-Data_Integrity-59666C?style=for-the-badge&logo=hibernate&logoColor=white" />
+  <img src="https://img.shields.io/badge/Hibernate-JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white" />
 </div>
 
- <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 
-## 📖 Descripción del Proyecto
+# 📖 Project Overview
 
-Este sistema de gestión de inventarios permite el control centralizado de **Usuarios**, **Productos** y **Órdenes de Compra**. El desarrollo destaca por la implementación de reglas de negocio estrictas que impiden la pérdida de datos y aseguran la consistencia de la información mediante validaciones de integridad referencial.
+Backend desarrollado con **Spring Boot** para la gestión de **usuarios, productos y órdenes**.
 
- <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+El sistema implementa **arquitectura en capas**, manejo de **DTOs inmutables** y **validaciones de reglas de negocio**.
 
-## 🛠️ Arquitectura Técnica
+<div align="center">
 
-El proyecto se basa en una arquitectura de capas diseñada para el desacoplamiento y la eficiencia:
+| Característica | Implementación |
+|------|------|
+Arquitectura | Layered Architecture |
+Lenguaje | Java 17 / 21 |
+Framework | Spring Boot 3 |
+Persistencia | Spring Data JPA + Hibernate |
+Base de datos | MySQL |
+Validaciones | Jakarta Validation |
 
-- **🔄 Controller Layer:** Endpoints RESTful para la interacción con el cliente.
-- **⚙️ Service Layer:** Lógica de negocio avanzada y orquestación de transacciones.
-- **🗄️ Persistence Layer:** Repositorios JPA optimizados para el manejo de UUIDs.
-- **⚠️ Exception Handler:** Centralización de errores de negocio para respuestas estandarizadas.
+</div>
 
- <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 
-## 🛡️ Business Rules & Data Integrity (Especialidad QA)
+# 🏗️ Arquitectura del Sistema
 
-Como **Automatizador**, he integrado "escudos de integridad" en los métodos críticos de eliminación:
+```
+Controller
+   ↓
+Service
+   ↓
+Repository
+   ↓
+Database
+```
 
-> [!IMPORTANT]
-> **Protección contra Borrado Físico:** Se utiliza la lógica `!list.isEmpty()` para validar dependencias antes de cualquier `delete`.
+<div align="center">
 
-| Entidad | Regla de Protección | Acción ante Conflicto |
-| :--- | :--- | :--- |
-| **User** | Bloqueo si existen órdenes vinculadas. | `409 Conflict` & Rollback |
-| **Product** | Bloqueo si hay registros en detalles de orden. | `409 Conflict` & Rollback |
-| **General** | Todas las operaciones son atómicas. | `@Transactional` |
+| Capa | Responsabilidad |
+|------|------|
+Controller | Exposición de endpoints REST |
+Service | Lógica de negocio |
+Repository | Acceso a datos |
+DTO | Transferencia de datos |
+Exception | Manejo centralizado de errores |
 
- <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+</div>
 
-## 🧪 Reporte de Calidad (QA Matrix)
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 
-Ciclo de validación técnica realizado para asegurar la robustez del sistema:
+# 🧩 Componentes del Sistema
 
-| ID | Módulo | Caso de Prueba | Resultado Esperado | Estado |
-| :--- | :--- | :--- | :--- | :--- |
-| **TC-01** | `User` | Delete User with orders | **409 - Transaction Rollback** | ✅ Pass |
-| **TC-02** | `User` | Delete User without orders | **204 - Successful Delete** | ✅ Pass |
-| **TC-03** | `Product` | Delete Product with sales | **409 - Transaction Rollback** | ✅ Pass |
-| **TC-04** | `Global` | UUID Format Persistence | **Valid CHAR(36) Store** | ✅ Pass |
- <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
- <!-- dwdcdac-->
+## 🔄 Controllers
+
+<div align="center">
+
+| Controller | Responsabilidad |
+|------|------|
+UserController | Gestión de usuarios |
+ProductController | Gestión de productos |
+OrderController | Creación y gestión de órdenes |
+OrderDetailController | Reportes de órdenes |
+
+</div>
+
+---
+
+## 🧠 Services
+
+<div align="center">
+
+| Servicio | Función |
+|------|------|
+UserService | Gestión de usuarios |
+ProductService | Gestión de productos |
+OrderService | Lógica de órdenes |
+OrderDetailService | Consultas y reportes |
+
+</div>
+
+---
+
+## 📦 DTOs
+
+Uso de **Java Records** para garantizar **inmutabilidad**.
+
+<div align="center">
+
+| Tipo | DTO |
+|------|------|
+Request | OrderRq |
+Request | ProductRq |
+Request | UserRq |
+Request | OrderDetailRq |
+Query | GetOrderByEmailRq |
+Response | OrderRs |
+Response | OrderReportRs |
+Response | OrderDetailReportRs |
+
+</div>
+
+---
+
+## 🗄️ Entities
+
+<div align="center">
+
+| Entidad | Descripción |
+|------|------|
+User | Información del usuario |
+Product | Catálogo de productos |
+Order | Orden de compra |
+OrderDetail | Productos dentro de una orden |
+
+</div>
+
+Relaciones principales
+
+```
+User 1 --- * Order
+Order 1 --- * OrderDetail
+Product 1 --- * OrderDetail
+```
+
+---
+
+## 🗂️ Repositories
+
+<div align="center">
+
+| Repository | Función |
+|------|------|
+UserRepository | CRUD usuarios |
+ProductRepository | CRUD productos |
+OrderRepository | Persistencia de órdenes |
+OrderDetailRepository | Detalles de órdenes |
+
+</div>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+
+# ⚠️ Manejo de Excepciones
+
+Sistema centralizado de errores.
+
+<div align="center">
+
+| Componente | Función |
+|------|------|
+BaseBusinessException | Excepción base |
+BusinessErrorType | Enum de errores |
+GlobalExceptionHandler | Manejo global |
+
+</div>
+
+Excepciones específicas
+
+<div align="center">
+
+| Excepción | Descripción |
+|------|------|
+UserException | Errores de usuario |
+ProductException | Errores de producto |
+OrderException | Errores de orden |
+OrderDetailException | Errores de detalle |
+
+</div>
+
+```
+@RestControllerAdvice
+```
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+
+# 🛡️ Business Rules
+
+<div align="center">
+
+| Entidad | Regla |
+|------|------|
+User | No se puede eliminar si tiene órdenes |
+Product | No se puede eliminar si está en una orden |
+Order | Debe tener al menos un detalle |
+OrderDetail | Debe tener producto válido |
+
+</div>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+
+# 🔄 Flujo de Creación de Orden
+
+<div align="center">
+
+| Paso | Acción |
+|------|------|
+1 | Validar usuario |
+2 | Validar productos |
+3 | Calcular subtotales |
+4 | Calcular total |
+5 | Guardar orden |
+6 | Guardar detalles |
+
+</div>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+
+# 🧪 QA Matrix
+
+<div align="center">
+
+| ID | Escenario | Resultado Esperado |
+|----|-----------|--------------------|
+TC-01 | Eliminación de usuario con órdenes | Error 409 |
+TC-02 | Consulta de órdenes por email | Lista de órdenes |
+TC-03 | Validación de estado de orden | Estado consistente |
+TC-04 | Persistencia en base de datos | Datos guardados correctamente |
+
+</div>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+
+# 🛠️ Tecnologías
+
+<div align="center">
+
+| Tecnología | Uso |
+|------|------|
+Java 17 / 21 | Lenguaje principal |
+Spring Boot | Framework backend |
+Spring Data JPA | Persistencia |
+Hibernate | ORM |
+MySQL | Base de datos |
+Lombok | Reducción de boilerplate |
+Jakarta Validation | Validación |
+
+</div>
+
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
+
+# 💻 Ejemplo de Endpoint
+
+### Obtener órdenes por email
+
+```
+POST /api/details
+```
+
+Request
+
+```json
+{
+  "email":"cliente@email.com"
+}
+```
+
+Response
+
+```json
+[
+ {
+   "orderId":"123",
+   "email":"cliente@email.com",
+   "productName":"Laptop",
+   "quantity":1,
+   "subtotal":2000,
+   "status":"COMPLETED"
+ }
+]
+```
+
+
 <div align="center">
   <h3>
     <img src='https://raw.githubusercontent.com/ShahriarShafin/ShahriarShafin/main/Assets/handshake.gif' width="60px" />
-    For More Information, Please Check Out or Connect Me Via
+   Hablemos de Arquitectura y Calidad de Software
   </h3>
 </div>
 <br>
-
 </div>
 <p align="center">
   <a href="mailto:sebatianpena950@gmail.com"  target="_blank">
@@ -92,7 +321,7 @@ Ciclo de validación técnica realizado para asegurar la robustez del sistema:
 
 <div align="center">
   :heart_eyes: Thanks for watching my profile! Have a nice day! :wink: <br/>
-  &copy; 2025 Johan Sebastian Peña Ordoñez
+  &copy; 2026 Johan Sebastian Peña Ordoñez
 </div> 
 
 <div align="center"> 
@@ -100,7 +329,3 @@ Ciclo de validación técnica realizado para asegurar la robustez del sistema:
 	
   <img src="https://raw.githubusercontent.com/bornmay/bornmay/Update/svg/Bottom.svg" alt="Github Stats" />
 </div>
-
-<div align="center">
- 💡 La mejora continua no es una opción, es parte del código.
-</div> 
