@@ -1,7 +1,6 @@
 package com.prueba.pruebaExamen.service;
 
-import com.prueba.pruebaExamen.dto.UserRq;
-import com.prueba.pruebaExamen.dto.UserRs;
+import com.prueba.pruebaExamen.dto.DtoUser;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
@@ -19,20 +18,20 @@ public interface UserService {
      * @param request Objeto con los datos de entrada validados.
      * @return DTO de respuesta con los datos procesados.
      */
-    UserRs create(@NonNull UserRq request);
+    DtoUser create(@NonNull DtoUser request);
 
     /**
      * Define la operación para recuperar el catálogo completo de usuarios.
      * @return List de UserRs.
      */
-    List<UserRs> findAll();
+    List<DtoUser> findAll();
 
     /**
      * Define la búsqueda de un recurso específico mediante su identificador único.
      * @param id Identificador de tipo UUID.
      * @return DTO con la información del usuario encontrado.
      */
-    UserRs findById(UUID id);
+    DtoUser findById(UUID id);
 
     /**
      * Define la operación de actualización de datos de un usuario existente.
@@ -40,7 +39,7 @@ public interface UserService {
      * @param request Datos actualizados del usuario.
      * @return DTO con la información persistida tras la actualización.
      */
-    UserRs update(UUID id, UserRq request);
+    DtoUser update(UUID id, DtoUser request);
 
     /**
      * Define la eliminación de un usuario del sistema.

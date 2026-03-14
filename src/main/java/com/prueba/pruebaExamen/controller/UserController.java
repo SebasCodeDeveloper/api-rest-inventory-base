@@ -1,5 +1,6 @@
 package com.prueba.pruebaExamen.controller;
 
+import com.prueba.pruebaExamen.dto.DtoUser;
 import com.prueba.pruebaExamen.dto.UserRq;
 import com.prueba.pruebaExamen.dto.UserRs;
 import com.prueba.pruebaExamen.service.UserService;
@@ -17,8 +18,9 @@ import java.util.UUID;
  * Expone los endpoints siguiendo el estándar de arquitectura RESTful.
  */
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
 
     private final UserService service;
@@ -27,7 +29,7 @@ public class UserController {
      * Crea un nuevo usuario. Retorna estado 201 (Created).
      */
     @PostMapping
-    public ResponseEntity<UserRs> create(@RequestBody @Valid UserRq request) {
+    public ResponseEntity<DtoUser> create(@RequestBody @Valid DtoUser request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
     }
 
@@ -44,7 +46,7 @@ public class UserController {
      * Lista todos los usuarios registrados en el sistema.
      */
     @GetMapping
-    public ResponseEntity<List<UserRs>> getAllUsers() {
+    public ResponseEntity<List<DtoUser>> getAllUsers() {
 
         return ResponseEntity.ok(service.findAll());
     }
@@ -62,7 +64,7 @@ public class UserController {
      * Actualiza la información de un usuario existente identificado por su UUID.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid UserRq request) {
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid DtoUser request) {
         return ResponseEntity.ok(service.update(id, request));
     }
 }
