@@ -17,8 +17,9 @@ import java.util.UUID;
  * Expone los endpoints siguiendo el estándar de arquitectura RESTful.
  */
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class ProductController {
 
     private final ProductService productService;

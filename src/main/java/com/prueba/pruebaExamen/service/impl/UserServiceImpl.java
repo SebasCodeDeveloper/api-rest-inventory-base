@@ -1,7 +1,6 @@
 package com.prueba.pruebaExamen.service.impl;
 
-import com.prueba.pruebaExamen.dto.UserRq;
-import com.prueba.pruebaExamen.dto.UserRs;
+import com.prueba.pruebaExamen.dto.DtoUser;
 import com.prueba.pruebaExamen.entity.User;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
 import com.prueba.pruebaExamen.exception.UserException;
@@ -29,7 +28,7 @@ public class UserServiceImpl implements UserService {
      * Procesa la creación de un nuevo usuario con validación de unicidad de email.
      */
     @Override
-    public UserRs create(@NonNull UserRq request) {
+    public DtoUser create(@NonNull DtoUser request) {
 
         // Garantizar que el correo no esté duplicado en el sistema
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -52,7 +51,7 @@ public class UserServiceImpl implements UserService {
      * Recupera todos los usuarios y valida que la lista no sea vacía.
      */
     @Override
-    public List<UserRs> findAll() {
+    public List<DtoUser> findAll() {
         List<User> users = userRepository.findAll();
 
         // Si el repositorio no retorna datos, se lanza una excepción controlada
@@ -70,7 +69,7 @@ public class UserServiceImpl implements UserService {
      * Busca un usuario mediante su identificador técnico (UUID).
      */
     @Override
-    public UserRs findById(UUID id) {
+    public DtoUser findById(UUID id) {
         return userRepository.findById(id)
                 .map(this::toRs)
                 .orElseThrow(() -> new UserException(
@@ -100,7 +99,7 @@ public class UserServiceImpl implements UserService {
      * Actualiza un usuario existente, permitiendo cambios de email con validación de conflictos.
      */
     @Override
-    public UserRs update(UUID id, UserRq request) {
+    public DtoUser update(UUID id, DtoUser request) {
 
         // Verifica existencia previa del recurso
         User user = userRepository.findById(id)
@@ -129,8 +128,9 @@ public class UserServiceImpl implements UserService {
     /**
      * Mapper privado para transformar Entidad (JPA) a DTO de Respuesta (RS).
      */
-    private UserRs toRs(@NonNull User user) {
-        UserRs rs = new UserRs();
+    private DtoUser toRs(@NonNull User user) {
+        DtoUser rs = new DtoUser();
+        rs.setId(user.getId());
         rs.setName(user.getName());
         rs.setEmail(user.getEmail());
         rs.setAge(user.getAge());
