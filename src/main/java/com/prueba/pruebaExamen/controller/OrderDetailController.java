@@ -18,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/details")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class OrderDetailController {
 
     private final OrderDetailServices orderDetailServices;
