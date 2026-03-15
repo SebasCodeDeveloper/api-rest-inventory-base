@@ -1,5 +1,6 @@
 package com.prueba.pruebaExamen.exception;
 
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,22 +51,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex) {
-
-        // Obtiene el mensaje personalizado configurado en las anotaciones de validación (@NotBlank, @Email, etc.)
-        // SOLO OPTIENE UN ERROR
-       //  String message = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
-
-        // 1. Extraemos TODOS los errores de forma dinámica
         List<String> errors = ex.getBindingResult()
-                .getFieldErrors() // Buscamos errores por campo
+                .getFieldErrors()
                 .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .map(DefaultMessageSourceResolvable::getDefaultMessage) // O "error.getField() + ': ' + error.getDefaultMessage()"
                 .toList();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of(
-                         HttpStatus.BAD_REQUEST.value(),
-                         "Validation Error",
+                        "status", 400,
+                        "type", "Validation Error",
                         "message", errors
                 ));
     }
