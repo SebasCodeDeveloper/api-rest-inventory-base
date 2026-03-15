@@ -32,8 +32,8 @@ public class UserServiceImpl implements UserService {
 
         // Garantizar que el correo no esté duplicado en el sistema
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserException(request.getEmail() +
-                    " El usuario ya esta registrado", BusinessErrorType.EMAIL_IN_USE);
+            throw new UserException(
+                    "El usuario " + request.getEmail() + " ya esta registrado", BusinessErrorType.EMAIL_IN_USE);
         }
 
         //Convierte el DTO de entrada a la Entidad JPA

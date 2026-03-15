@@ -1,8 +1,6 @@
 package com.prueba.pruebaExamen.controller;
 
 import com.prueba.pruebaExamen.dto.DtoUser;
-import com.prueba.pruebaExamen.dto.UserRq;
-import com.prueba.pruebaExamen.dto.UserRs;
 import com.prueba.pruebaExamen.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
