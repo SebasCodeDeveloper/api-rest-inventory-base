@@ -130,6 +130,7 @@ public class ProductServiceImpl implements ProductService {
      */
     private ProductRs toRs(Product product) {
         return new ProductRs(
+                product.getId(),
                 product.getName(),
                 product.getPrice(),
                 product.getStock()

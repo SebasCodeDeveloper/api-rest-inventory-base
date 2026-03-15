@@ -15,22 +15,27 @@ import java.util.UUID;
 //@NoArgsConstructor
 //@AllArgsConstructor
 //@Data
-    //CON LA RECORD SUPLANTO LOS GETTER Y LAS DE MAS ETIQUETAS
-public record ProductRs (
+//CON LA RECORD SUPLANTO LOS GETTER Y LAS DE MAS ETIQUETAS
+public record ProductRs(
 
-                /**
-                 * Nombre comercial del producto.
-                 */
-                String name,
+        /**
+         * id del producto.
+         */
+        UUID id,
+        /**
+         * Nombre comercial del producto.
+         */
+        String name,
 
-                /**
-                 * Precio de venta al público.
-                 */
-                 BigDecimal price,
+        /**
+         * Precio de venta al público.
+         */
+        BigDecimal price,
 
-                /**
-                 * Cantidad actual disponible en el inventario.
-                 */
-                 Integer stock
-){}
+        /**
+         * Cantidad actual disponible en el inventario.
+         */
+        Integer stock
+) {
+}
 
