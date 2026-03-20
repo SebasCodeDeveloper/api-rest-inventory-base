@@ -1,5 +1,6 @@
 package com.prueba.pruebaExamen.service.impl;
 
+import com.prueba.pruebaExamen.dto.GetProductByNameRq;
 import com.prueba.pruebaExamen.dto.ProductRq;
 import com.prueba.pruebaExamen.dto.ProductRs;
 import com.prueba.pruebaExamen.entity.Product;
@@ -54,17 +55,32 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<ProductRs> findAll() {
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAll(); // Primera llamada
 
-        // Si el repositorio no retorna datos, se lanza una excepción controlada
-        if (productRepository.findAll().isEmpty()) {
-            throw new ProductException("No se encontraron producto registrados en el sistema",
+        // Segunda llamada innecesaria en el IF. Usa la lista 'products' que ya tienes.
+        if (products.isEmpty()) {
+            throw new ProductException("No se encontraron productos...", BusinessErrorType.NOT_FOUND);
+        }
+
+        return products.stream().map(this::toRs).collect(Collectors.toList());
+    }
+
+    /**
+     * buscar producto por su nombre (name)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductRs> findByName(GetProductByNameRq request) {
+        List<Product> products = productRepository.findByNameContainingIgnoreCase(request.productName());
+
+        if (products.isEmpty()) {
+            throw new ProductException("No se encontraron productos con el nombre: " + request.productName(),
                     BusinessErrorType.NOT_FOUND);
         }
 
         return products.stream()
                 .map(this::toRs)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -88,12 +104,12 @@ public class ProductServiceImpl implements ProductService {
     public void delete(UUID id) {
         Product product = productRepository.findById(id).
                 orElseThrow(() -> new ProductException("El producto  no existe", BusinessErrorType.NOT_FOUND));
-        productRepository.delete(product);
 
         if (!product.getOrderDetails().isEmpty()) {
-            throw new ProductException( "No se puede eliminar este producto por que tienes ordenes realizadas.",
+            throw new ProductException("Producto asociado a una orden.",
                     BusinessErrorType.CONFLICT);
         }
+        productRepository.delete(product);
 
     }
 
@@ -133,7 +149,8 @@ public class ProductServiceImpl implements ProductService {
                 product.getId(),
                 product.getName(),
                 product.getPrice(),
-                product.getStock()
+                product.getStock(),
+                product.getOrderDetails()
         );
     }
 }

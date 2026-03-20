@@ -195,8 +195,8 @@ public class OrderServiceImpl implements OrderService {
 
         // Control de estados para evitar cancelaciones de órdenes pagadas o ya anuladas
         if (order.getStatus() != OrderStatus.CREATED) {
-            String mensaje = (order.getStatus() == OrderStatus.PAID) ? "No es posible eliminar  una orden ya pagada" :
-                    (order.getStatus() == OrderStatus.CANCELLED) ? "La orden ya se encuentra en estado cancelado" :
+            String mensaje = (order.getStatus() == OrderStatus.PAID) ? "Las órdenes pagadas no permiten eliminación." :
+                    (order.getStatus() == OrderStatus.CANCELLED) ? "Las órdenes canceladas no permiten eliminación." :
                             "Operación no permitida para el estado actual de la orden";
 
             throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);

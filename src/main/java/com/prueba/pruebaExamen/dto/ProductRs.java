@@ -1,8 +1,10 @@
 package com.prueba.pruebaExamen.dto;
 
+import com.prueba.pruebaExamen.entity.OrderDetail;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -35,7 +37,13 @@ public record ProductRs(
         /**
          * Cantidad actual disponible en el inventario.
          */
-        Integer stock
+        Integer stock,
+
+        /**
+         * Contiene el detalle de la orden
+         */
+        List<OrderDetail> orderDetails
+
 ) {
 }
 

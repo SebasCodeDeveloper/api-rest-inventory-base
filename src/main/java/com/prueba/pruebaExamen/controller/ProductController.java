@@ -1,5 +1,6 @@
 package com.prueba.pruebaExamen.controller;
 
+import com.prueba.pruebaExamen.dto.GetProductByNameRq;
 import com.prueba.pruebaExamen.dto.ProductRq;
 import com.prueba.pruebaExamen.dto.ProductRs;
 import com.prueba.pruebaExamen.service.ProductService;
@@ -38,6 +39,14 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductRs>> findAll() {
         return ResponseEntity.ok(productService.findAll());
+    }
+
+    /**
+     * Obtener producto por un nombre
+     */
+    @PostMapping("/search")
+    public ResponseEntity<List<ProductRs>> findByName(@Valid @RequestBody GetProductByNameRq request) {
+        return ResponseEntity.ok(productService.findByName(request));
     }
 
     /**

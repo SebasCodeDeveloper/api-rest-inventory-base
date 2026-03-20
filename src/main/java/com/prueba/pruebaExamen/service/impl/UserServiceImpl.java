@@ -1,9 +1,12 @@
 package com.prueba.pruebaExamen.service.impl;
 
 import com.prueba.pruebaExamen.dto.DtoUser;
+import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
+import com.prueba.pruebaExamen.entity.Order;
 import com.prueba.pruebaExamen.entity.User;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
 import com.prueba.pruebaExamen.exception.UserException;
+import com.prueba.pruebaExamen.repository.OrderRepository;
 import com.prueba.pruebaExamen.repository.UserRepository;
 import com.prueba.pruebaExamen.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
 /**
  * Lógica de negocio para la gestión de usuarios.
  * Implementa el desacoplamiento entre controladores y persistencia.
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final OrderRepository  orderRepository;
 
     /**
      * Procesa la creación de un nuevo usuario con validación de unicidad de email.
@@ -66,6 +71,21 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Buscar usuario por su email (email).
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<DtoUser> getByEmail(GetOrderByEmailRq request) {
+        return userRepository.findByEmail(request.getEmail())
+                .map(user -> List.of(toRs(user)))
+                .orElseThrow(() -> new UserException(
+                        "No se encontraron registros para el email: " + request.getEmail(),
+                        BusinessErrorType.NOT_FOUND
+                ));
+    }
+
+
+    /**
      * Busca un usuario mediante su identificador técnico (UUID).
      */
     @Override
@@ -88,10 +108,9 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new  UserException("El usuario no existe",  BusinessErrorType.NOT_FOUND));
         userRepository.delete(user);
 
-        //Validacion del usuario si tiene órdenes asociadas
-        if (!user.getOrders().isEmpty()) {
-            throw new UserException("No se puede eliminar este usuario por que tienes ordenes realizadas.",
-                    BusinessErrorType.CONFLICT);
+        Order order = orderRepository.findByUserId(user.getId());
+        if (order != null) {
+            throw new UserException("Usuario asociado a una orden.",BusinessErrorType.CONFLICT);
         }
     }
 

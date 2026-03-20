@@ -1,6 +1,7 @@
 package com.prueba.pruebaExamen.controller;
 
 import com.prueba.pruebaExamen.dto.DtoUser;
+import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
 import com.prueba.pruebaExamen.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,15 @@ public class UserController {
     public ResponseEntity<List<DtoUser>> getAllUsers() {
 
         return ResponseEntity.ok(service.findAll());
+    }
+
+    /**
+     * Recupera un listado de ususarios asociadas a una dirección de correo electrónico específica.
+     * Utiliza un objeto de petición para asegurar la validación del formato del email antes de la consulta.
+     */
+    @PostMapping("/email")
+    public ResponseEntity<List<DtoUser>> getByEmail(@Valid @RequestBody GetOrderByEmailRq request) {
+        return ResponseEntity.ok(service.getByEmail(request));
     }
 
     /**

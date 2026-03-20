@@ -4,6 +4,7 @@ import com.prueba.pruebaExamen.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +21,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
      * y evitar errores de puntero nulo (NullPointerException).
      */
     Optional<Product> findByName(String name);
+
+    /**
+     * Recupera una colección de productos  filtradas por nombre del usuario.
+     * El método utiliza la convención de nombres de Spring Data JPA para navegar a través
+     * de la relación entre el nombre y la entidad Products.
+     */
+    List<Product> findByNameContainingIgnoreCase(String name);
 }
