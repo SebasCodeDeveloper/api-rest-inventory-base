@@ -1,5 +1,9 @@
 package com.prueba.pruebaExamen.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +22,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,property = "id")
 @Entity
 @Table(name = "products")
 public class Product {
@@ -57,8 +62,8 @@ public class Product {
      * Una orden  puede tener muchas productos.
      * FetchType para traer los pedidos desde el servico
      */
-    // Añade esto dentro de tu clase Product
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<OrderDetail> orderDetails = new ArrayList<>();
 
 }

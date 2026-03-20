@@ -1,5 +1,6 @@
 package com.prueba.pruebaExamen.service;
 
+import com.prueba.pruebaExamen.dto.GetProductByNameRq;
 import com.prueba.pruebaExamen.dto.ProductRq;
 import com.prueba.pruebaExamen.dto.ProductRs;
 
@@ -46,4 +47,10 @@ public interface ProductService {
      * @param id Identificador único del prodcuto a remover.
      */
     void delete(UUID id);
+
+    /**
+     * Define la operación para recuperar el nombre de un producto .
+     * @return List de DtoUser.
+     */
+    List<ProductRs> findByName(GetProductByNameRq request);
 }

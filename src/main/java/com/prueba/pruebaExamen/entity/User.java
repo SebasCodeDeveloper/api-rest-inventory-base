@@ -1,5 +1,7 @@
     package com.prueba.pruebaExamen.entity;
 
+    import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+    import com.fasterxml.jackson.annotation.ObjectIdGenerators;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.*;
     import lombok.AllArgsConstructor;
@@ -21,6 +23,7 @@
     @NoArgsConstructor
     @AllArgsConstructor
     @Entity
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     @Table(name = "users")
     public class User {
 
@@ -51,14 +54,5 @@
          */
         @Column(nullable = false)
         private Integer age;
-
-        /**
-         * Relación OneToMany.
-         * Un usuario puede tener muchas órdenes.
-         * El 'mappedBy' debe coincidir con el nombre del campo en la entidad Order.
-         */
-
-        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-        private List<Order> orders = new ArrayList<>();
 
     }

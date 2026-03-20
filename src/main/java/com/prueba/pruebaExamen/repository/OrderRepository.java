@@ -19,4 +19,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
      * de la relación entre la orden y la entidad User.
      */
     List<Order> findByUserEmail(String email);
+
+    /**
+     * Busca un usuario por su email para validar duplicados o realizar consultas específicas.
+     */
+    Order findByUserId(UUID userId);
 }

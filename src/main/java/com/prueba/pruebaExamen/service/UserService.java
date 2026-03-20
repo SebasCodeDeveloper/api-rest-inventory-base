@@ -1,6 +1,9 @@
 package com.prueba.pruebaExamen.service;
 
 import com.prueba.pruebaExamen.dto.DtoUser;
+import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
+import com.prueba.pruebaExamen.dto.OrderReportRs;
+import com.prueba.pruebaExamen.entity.User;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
@@ -22,7 +25,7 @@ public interface UserService {
 
     /**
      * Define la operación para recuperar el catálogo completo de usuarios.
-     * @return List de UserRs.
+     * @return List de DtoUser.
      */
     List<DtoUser> findAll();
 
@@ -47,4 +50,9 @@ public interface UserService {
      */
     void delete(UUID id);
 
+    /**
+     * Define la operación para recuperar el email de un usuarios .
+     * @return List de DtoUser.
+     */
+    List<DtoUser> getByEmail(GetOrderByEmailRq request);
 }

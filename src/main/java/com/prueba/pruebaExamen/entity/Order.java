@@ -1,5 +1,7 @@
 package com.prueba.pruebaExamen.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,property = "id")
 @Table(name = "orders")
 public class Order {
 
@@ -43,8 +46,8 @@ public class Order {
      * 'cascade = CascadeType.ALL' asegura que al guardar una orden, sus detalles se guardan automáticamente.
      */
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetail> details = new ArrayList<>();
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetail> details = new ArrayList<>() ;
 
     /**
      * Monto total de la orden.

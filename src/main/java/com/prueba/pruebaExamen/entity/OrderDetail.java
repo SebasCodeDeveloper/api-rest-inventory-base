@@ -1,5 +1,8 @@
 package com.prueba.pruebaExamen.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +22,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id") // Usará el campo 'id' como referencia
 @Table(name = "order_details")
 public class OrderDetail {
 
@@ -34,6 +38,7 @@ public class OrderDetail {
      * Referencia a la entidad de orden superior a la que se vincula este desglose.
      */
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
@@ -41,6 +46,7 @@ public class OrderDetail {
      * Vinculación con un único producto del catálogo para cada línea de detalle.
      */
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
