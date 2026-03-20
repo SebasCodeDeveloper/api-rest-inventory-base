@@ -1,9 +1,12 @@
 package com.prueba.pruebaExamen.repository;
 
+import com.prueba.pruebaExamen.dto.DtoUser;
+import com.prueba.pruebaExamen.entity.Order;
 import com.prueba.pruebaExamen.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,5 +23,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     boolean existsByEmail(String email);
 
+    /**
+     * Busca un usuario por email para validar duplicados o realizar consultas específicas.
+     * Retorna un Optional para asegurar que el servicio maneje correctamente la ausencia del dato
+     * y evitar errores de puntero nulo (NullPointerException).
+     */
     Optional<User> findByEmail(String email);
+
 }
