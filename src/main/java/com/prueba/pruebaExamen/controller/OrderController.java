@@ -30,7 +30,7 @@ public class OrderController {
      * Valida la estructura del cuerpo de la petición y retorna la información de la orden persistida con estado 201 Created.
      */
     @PostMapping
-    public ResponseEntity<OrderReportRs> create(@RequestBody @Valid OrderRq request) {
+    public ResponseEntity<OrderReportRs> create(@Valid @RequestBody OrderRq request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(request));
     }
 
@@ -58,6 +58,14 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<OrderReportRs>> getAll() {
         return ResponseEntity.ok(orderService.getAll());
+    }
+
+    /**
+     * Actualiza una orden existente, recalculando stock y totales.
+     */
+    @PutMapping ("/{id}")
+    public ResponseEntity<OrderReportRs> update(@PathVariable UUID id, @Valid @RequestBody OrderReportRs request) {
+        return ResponseEntity.ok(orderService.update(id, request));
     }
 
     /**

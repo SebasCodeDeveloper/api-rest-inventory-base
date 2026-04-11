@@ -56,6 +56,16 @@ public interface OrderService {
     OrderReportRs cancel(UUID id);
 
     /**
+     * Define la actualización integral de una orden existente.
+     * Permite la modificación del usuario asociado, la reestructuración de ítems y
+     * el recalculo de importes, gestionando la reversión y reasignación de stock.
+     * * @param id Identificador único de la orden a modificar.
+     * @param request DTO con la nueva información de la orden (email e ítems).
+     * @return DTO con la información de la orden tras procesar los cambios.
+     */
+    OrderReportRs update(UUID id, OrderReportRs request);
+
+    /**
      * Define la eliminación de una orden del sistema.
      * @param id Identificador única orden a remover.
      */
