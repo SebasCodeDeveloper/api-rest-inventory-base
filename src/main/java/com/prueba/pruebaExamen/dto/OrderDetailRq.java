@@ -2,6 +2,8 @@ package com.prueba.pruebaExamen.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -14,8 +16,8 @@ public record OrderDetailRq(
          * Identificador único del producto (UUID) que el cliente desea adquirir.
          * Este campo es obligatorio para realizar la consulta de precios y stock en la base de datos.
          */
-        @NotNull(message = "El id del producto es obligatorio")
-        UUID productId,
+        @NotNull(message = "El nombre del producto es obligatorio")
+        String productName,
 
         /**
          * Valor entero que especifica el número de unidades solicitadas del artículo.

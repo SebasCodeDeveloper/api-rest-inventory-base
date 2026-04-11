@@ -51,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
         for (OrderDetailRq item : request.items()) {
 
             // Verificación de existencia del producto en catálogo
-            Product product = productRepository.findById(item.productId())
+            Product product = productRepository.findByName(item.productName())
                     .orElseThrow(() -> new OrderException("Producto no encontrado", BusinessErrorType.NOT_FOUND));
 
             // Control de disponibilidad física en inventario
@@ -159,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * Ejecuta la anulación de una orden y realiza la reversión de stock al inventario.
+     * Cancelar un orden existente frente a sus validaciones.
      */
     @Override
     public OrderReportRs cancel(UUID id) {
@@ -170,7 +170,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() != OrderStatus.CREATED) {
             String mensaje = (order.getStatus() == OrderStatus.PAID) ? "No es posible cancelar una transacción ya pagada" :
                     (order.getStatus() == OrderStatus.CANCELLED) ? "La orden ya se encuentra en estado cancelado" :
-                            "Operación no permitida para el estado actual de la orden";
+                    "Operación no permitida para el estado actual de la orden";
 
             throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);
         }
@@ -186,6 +186,70 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * Ejecuta la anulación de una orden y realiza la reversión de stock al inventario.
+     */
+    @Override
+    public OrderReportRs update(UUID id, OrderReportRs request) {
+        // Validacion de existencia de order
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderException("La orden con ID " + id + " no existe",
+                        BusinessErrorType.NOT_FOUND));
+
+        // Validacion de negocio, solo se puede editar ordendes en estado creado
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new OrderException("Solo se pueden modificar órdenes en estado CREATED",
+                    BusinessErrorType.UNPROCESSABLE);
+        }
+
+        //Si el email en el request es distinto al de la orden actual, buscamos el nuevo usuario
+        if (!order.getUser().getEmail().equals(request.email())) {
+            User newUser = userRepository.findByEmail(request.email())
+                    .orElseThrow(() -> new OrderException("El nuevo usuario con email " + request.email() + " no existe",
+                            BusinessErrorType.NOT_FOUND));
+            order.setUser(newUser);
+        }
+
+        // Devolver el inventario.
+        for (OrderDetail detail : order.getDetails()) {
+            Product product = detail.getProduct();
+            product.setStock(product.getStock() + detail.getQuantity());
+        }
+        order.getDetails().clear();
+
+        for (ProductItemRs newItem : request.items()) {
+            Product product = productRepository.findByName(newItem.productName())
+                    .orElseThrow(() -> new OrderException("Producto no encontrado: " + newItem.productName(),
+                            BusinessErrorType.NOT_FOUND));
+
+            // Validacion  de  stock disponible
+            if (product.getStock() < newItem.quantity()) {
+                throw new OrderException("Stock insuficiente para: " + product.getName() +
+                        " (Disponible: " + product.getStock() + ")",
+                        BusinessErrorType.UNPROCESSABLE);
+            }
+            product.setStock(product.getStock() - newItem.quantity());
+
+            BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(newItem.quantity()));
+
+            // Crear nuevo detalle
+            OrderDetail detail = new OrderDetail();
+            detail.setProduct(product);
+            detail.setQuantity(newItem.quantity());
+            detail.setUnitPrice(product.getPrice());
+            detail.setSubtotal(subtotal);
+
+            // Vincular a la orden
+            order.addDetail(detail);
+        }
+
+
+        order.calculateTotal();
+        Order updatedOrder = orderRepository.save(order);
+
+        return mapToResponse(updatedOrder);
+    }
+
+    /**
      * Realiza el borrado de la orden y devolviendo los productos a su posicion  anterios .
      */
     @Override
@@ -197,7 +261,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() != OrderStatus.CREATED) {
             String mensaje = (order.getStatus() == OrderStatus.PAID) ? "Las órdenes pagadas no permiten eliminación." :
                     (order.getStatus() == OrderStatus.CANCELLED) ? "Las órdenes canceladas no permiten eliminación." :
-                            "Operación no permitida para el estado actual de la orden";
+                    "Operación no permitida para el estado actual de la orden";
 
             throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);
         }
