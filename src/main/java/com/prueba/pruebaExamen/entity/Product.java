@@ -17,11 +17,12 @@ import java.util.UUID;
 
 /**
  * Entidad que representa la tabla 'products' en la base de datos.
+ * Incluye soporte para borrado lógico (Soft Delete) para mantener la integridad de las órdenes.
  */
 @Getter
 @Setter
 @NoArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,property = "id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Entity
 @Table(name = "products")
 public class Product {
@@ -38,28 +39,31 @@ public class Product {
      * Nombre del producto.
      * Se marca como único para evitar productos duplicados.
      */
-
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
     /**
      * Precio unitario del producto.
      */
-
     @Column(nullable = false)
     private BigDecimal price;
 
     /**
      * Cantidad disponible en inventario.
      */
-
     @Column(nullable = false)
     private Integer stock;
 
     /**
-     * Relación OneToMany.
-     * Una orden  puede tener muchas productos.
-     * FetchType para traer los pedidos desde el servico
+     * Estado de visibilidad del producto.
+     * Permite realizar un "Soft Delete" para que el producto no aparezca en el inventario
+     * activo, pero las órdenes históricas conserven su referencia.
+     */
+    @Column(nullable = false)
+    private boolean active = true;
+
+    /**
+     * Relación OneToMany con el detalle de las órdenes.
      */
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference

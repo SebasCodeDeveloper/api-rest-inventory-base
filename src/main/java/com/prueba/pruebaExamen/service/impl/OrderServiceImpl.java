@@ -175,14 +175,16 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);
         }
 
-        // Procedimiento de devolución de stock físico al catálogo de productos
         for (OrderDetail detail : order.getDetails()) {
             Product product = detail.getProduct();
-            product.setStock(product.getStock() + detail.getQuantity());
+            if (product != null) {
+                product.setStock(product.getStock() + detail.getQuantity());
+            }
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        return mapToResponse(order);
+
+        return mapToResponse(orderRepository.save(order));
     }
 
     /**
@@ -266,12 +268,16 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderException(mensaje, BusinessErrorType.UNPROCESSABLE);
         }
 
-        // Procedimiento de devolución de stock físico al catálogo de productos
+        // Procedimiento de devolución de stock físico al catálogo de productos y liberación
         for (OrderDetail detail : order.getDetails()) {
             Product product = detail.getProduct();
-            product.setStock(product.getStock() + detail.getQuantity());
+            if (product != null) {
+                product.setStock(product.getStock() + detail.getQuantity());
+                detail.setProduct(null);
+            }
         }
 
+        order.setUser(null);
         order.setStatus(OrderStatus.CANCELLED);
 
         orderRepository.delete(order);
@@ -284,17 +290,23 @@ public class OrderServiceImpl implements OrderService {
     private OrderReportRs mapToResponse(Order order) {
         // Transformación funcional de la lista de detalles de la entidad a DTOs de respuesta
         List<ProductItemRs> detailList = order.getDetails().stream()
-                .map(detail -> new ProductItemRs(
-                        detail.getProduct().getName(),
-                        detail.getQuantity(),
-                        detail.getUnitPrice(),
-                        detail.getSubtotal()
-                ))
+                .map(detail -> {
+                    String productName = (detail.getProduct() != null) ? detail.getProduct().getName() : "Producto Liberado";
+                    return new ProductItemRs(
+                            productName,
+                            detail.getQuantity(),
+                            detail.getUnitPrice(),
+                            detail.getSubtotal()
+                    );
+                })
                 .toList();
+
+        // Manejo preventivo si el usuario es nulo tras una cancelación
+        String userEmail = (order.getUser() != null) ? order.getUser().getEmail() : "Usuario Liberado";
 
         return new OrderReportRs(
                 order.getId(),
-                order.getUser().getEmail(),
+                userEmail,
                 order.getStatus(),
                 order.getTotal(),
                 order.getCreatedAt(),
