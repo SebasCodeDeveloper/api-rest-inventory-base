@@ -55,4 +55,10 @@
         @Column(nullable = false)
         private Integer age;
 
+        /**
+         * Relacion de entidad User con Orders
+         */
+        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+        private List<Order> orders = new ArrayList<>();
+
     }
