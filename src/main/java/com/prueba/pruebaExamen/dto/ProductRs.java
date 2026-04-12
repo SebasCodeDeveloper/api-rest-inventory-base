@@ -42,7 +42,7 @@ public record ProductRs(
         /**
          * Contiene el detalle de la orden
          */
-        List<OrderDetail> orderDetails
+        List<OrderDetailProductRs> orderDetails
 
 ) {
 }
