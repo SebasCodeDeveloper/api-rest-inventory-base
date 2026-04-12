@@ -56,7 +56,7 @@
         private Integer age;
 
         /**
-         * Relacion de entidad User con Orders
+         * Edad del usuario. No permite valores nulos en la persistencia.
          */
         @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
         private List<Order> orders = new ArrayList<>();
