@@ -14,6 +14,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,12 +107,12 @@ public class UserServiceImpl implements UserService {
         //Buscamos el usuario o lanzamos excepción si no existe
         User user =  userRepository.findById(id)
                 .orElseThrow(() -> new  UserException("El usuario no existe",  BusinessErrorType.NOT_FOUND));
-        userRepository.delete(user);
 
         Order order = orderRepository.findByUserId(user.getId());
         if (order != null) {
             throw new UserException("Usuario asociado a una orden.",BusinessErrorType.CONFLICT);
         }
+        userRepository.delete(user);
     }
 
     /**
@@ -153,6 +154,9 @@ public class UserServiceImpl implements UserService {
         rs.setName(user.getName());
         rs.setEmail(user.getEmail());
         rs.setAge(user.getAge());
+        rs.setOrders(user.getOrders() != null ?
+                user.getOrders().stream().map(o -> (Object)o).collect(Collectors.toList()) :
+                new ArrayList<>());
 
         return rs;
     }
