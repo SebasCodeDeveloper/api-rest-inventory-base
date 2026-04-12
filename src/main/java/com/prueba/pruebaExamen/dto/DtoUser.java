@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -39,4 +40,9 @@ public class DtoUser {
     @NotNull(message = "La edad es obligatoria")
     @Min(value = 18, message = "La edad debe ser Mayor o igual a 18")
     private Integer age;
+
+    /**
+     * Lista de ordenes para la validacion de usuarios asociados a una orden
+     */
+    private List<Object> orders;
 }
