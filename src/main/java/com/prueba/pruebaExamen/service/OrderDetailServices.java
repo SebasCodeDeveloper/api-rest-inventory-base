@@ -1,6 +1,5 @@
 package com.prueba.pruebaExamen.service;
 
-import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
 import com.prueba.pruebaExamen.dto.OrderReportRs;
 
 import java.util.List;
@@ -26,10 +25,4 @@ public interface OrderDetailServices {
      */
     List<OrderReportRs> getOrderReport();
 
-    /**
-     * Define la consulta de reportes históricos filtrados por la identidad del cliente.
-     * @param request DTO que contiene el correo electrónico del usuario.
-     * @return Colección de órdenes agrupadas pertenecientes al email proporcionado.
-     */
-    List<OrderReportRs> getByEmail(GetOrderByEmailRq request);
 }

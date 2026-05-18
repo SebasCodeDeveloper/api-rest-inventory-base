@@ -52,8 +52,8 @@
         /**
          * Edad del usuario. No permite valores nulos en la persistencia.
          */
-        @Column(nullable = false)
-        private Integer age;
+        @Column(name = "numero", length = 10, nullable = false)
+        private String numero;
 
         /**
          * Edad del usuario. No permite valores nulos en la persistencia.

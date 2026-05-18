@@ -1,7 +1,7 @@
 package com.prueba.pruebaExamen.controller;
 
 import com.prueba.pruebaExamen.dto.DtoUser;
-import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
+import com.prueba.pruebaExamen.dto.SearchUserOrdersRq;
 import com.prueba.pruebaExamen.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +36,7 @@ public class UserController {
      * Obtiene un usuario específico por su identificador único (UUID).
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> findById(@PathVariable UUID id) {
-
+    public ResponseEntity<DtoUser> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -46,7 +45,6 @@ public class UserController {
      */
     @GetMapping
     public ResponseEntity<List<DtoUser>> getAllUsers() {
-
         return ResponseEntity.ok(service.findAll());
     }
 
@@ -54,9 +52,9 @@ public class UserController {
      * Recupera un listado de ususarios asociadas a una dirección de correo electrónico específica.
      * Utiliza un objeto de petición para asegurar la validación del formato del email antes de la consulta.
      */
-    @PostMapping("/email")
-    public ResponseEntity<List<DtoUser>> getByEmail(@Valid @RequestBody GetOrderByEmailRq request) {
-        return ResponseEntity.ok(service.getByEmail(request));
+    @PostMapping("/search")
+    public ResponseEntity<List<DtoUser>> searchUsers(@Valid @RequestBody SearchUserOrdersRq request) {
+        return ResponseEntity.ok(service.searchUsers(request));
     }
 
     /**
@@ -72,7 +70,7 @@ public class UserController {
      * Actualiza la información de un usuario existente identificado por su UUID.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid DtoUser request) {
+    public ResponseEntity<DtoUser> update(@PathVariable UUID id, @RequestBody @Valid DtoUser request) {
         return ResponseEntity.ok(service.update(id, request));
     }
 }
