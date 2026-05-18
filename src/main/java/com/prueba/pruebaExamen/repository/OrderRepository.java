@@ -2,7 +2,6 @@ package com.prueba.pruebaExamen.repository;
 
 import com.prueba.pruebaExamen.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +17,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
      * El método utiliza la convención de nombres de Spring Data JPA para navegar a través
      * de la relación entre la orden y la entidad User.
      */
-    List<Order> findByUserEmail(String email);
+    List<Order> findByUserEmailOrUserNumeroOrUserNameContainingIgnoreCase(String email, String numero, String name);
 
     /**
      * Busca un usuario por su email para validar duplicados o realizar consultas específicas.

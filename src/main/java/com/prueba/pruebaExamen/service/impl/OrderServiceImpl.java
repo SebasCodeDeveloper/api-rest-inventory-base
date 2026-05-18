@@ -102,11 +102,17 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<OrderReportRs> getByEmail(GetOrderByEmailRq request) {
-        List<Order> orders = orderRepository.findByUserEmail(request.getEmail());
+    public List<OrderReportRs> getByEmail(SearchUserOrdersRq request) {
+
+        // Ahora invoca el método con la coincidencia parcial (ContainingIgnoreCase)
+        List<Order> orders = orderRepository.findByUserEmailOrUserNumeroOrUserNameContainingIgnoreCase(
+                request.getEmail(),
+                request.getNumero(),
+                request.getName()
+        );
 
         if (orders.isEmpty()) {
-            throw new OrderException("No se encontraron registros de órdenes para el email: " + request.getEmail(),
+            throw new OrderException("No se encontraron ordenes con los datos ingresados.",
                     BusinessErrorType.NOT_FOUND);
         }
 
@@ -149,7 +155,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Restricción de flujo: Solo se paga lo que ha sido creado recientemente
-        if (order.getStatus() != OrderStatus.CREATED) {
+        if (order.getStatus() != OrderStatus.FINISHED) {
             throw new OrderException("El estado actual de la orden no permite procesar el pago",
                     BusinessErrorType.UNPROCESSABLE);
         }
@@ -197,9 +203,11 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderException("La orden con ID " + id + " no existe",
                         BusinessErrorType.NOT_FOUND));
 
-        // Validacion de negocio, solo se puede editar ordendes en estado creado
-        if (order.getStatus() != OrderStatus.CREATED) {
-            throw new OrderException("Solo se pueden modificar órdenes en estado CREATED",
+        // Usando una lista para que sea más fácil de leer
+        List<OrderStatus> estadosPermitidos = List.of(OrderStatus.CREATED, OrderStatus.IN_PROGRESS);
+
+        if (!estadosPermitidos.contains(order.getStatus())) {
+            throw new OrderException("Solo se pueden editar órdenes en estado CREATED o IN_PROGRESS",
                     BusinessErrorType.UNPROCESSABLE);
         }
 
@@ -283,6 +291,35 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.delete(order);
     }
 
+    @Override
+    public OrderReportRs updateStatus(UUID id, OrderStatus newStatus) {
+        // 1. Buscamos la orden (usando tu lógica de excepciones)
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderException("Orden no encontrada", BusinessErrorType.NOT_FOUND));
+
+        // 2. Si el estado es el mismo, devolvemos lo mismo (Idempotencia)
+        if (order.getStatus() == newStatus) {
+            return mapToResponse(order);
+        }
+
+        // 3. ORQUESTADOR SEGURO: Derivamos a tus funciones originales
+        // Esto garantiza que NO dañamos la lógica de stock ni de bloqueos.
+        return switch (newStatus) {
+            case PAID -> this.pay(id);      // Ejecuta tu lógica de pago actual
+            case CANCELLED -> this.cancel(id); // Ejecuta tu lógica de devolución de stock actual
+            default -> {
+                // Para estados operativos (IN_PROGRESS, FINISHED, CREATED)
+                // Bloqueamos cambios si la orden ya está cerrada por seguridad
+                if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELLED) {
+                    throw new OrderException("No se puede modificar el estado de una orden finalizada.",
+                            BusinessErrorType.UNPROCESSABLE);
+                }
+                order.setStatus(newStatus);
+                yield mapToResponse(orderRepository.save(order));
+            }
+        };
+    }
+
 
     /**
      * Mapeador interno para transformar la entidad Order y sus detalles a una respuesta DTO jerárquica.
@@ -304,9 +341,13 @@ public class OrderServiceImpl implements OrderService {
         // Manejo preventivo si el usuario es nulo tras una cancelación
         String userEmail = (order.getUser() != null) ? order.getUser().getEmail() : "Usuario Liberado";
 
+
+        assert order.getUser() != null;
         return new OrderReportRs(
                 order.getId(),
                 userEmail,
+                order.getUser().getName(),
+                order.getUser().getNumero(),
                 order.getStatus(),
                 order.getTotal(),
                 order.getCreatedAt(),

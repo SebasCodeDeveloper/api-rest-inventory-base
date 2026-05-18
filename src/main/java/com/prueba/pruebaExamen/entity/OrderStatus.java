@@ -25,4 +25,10 @@ public enum OrderStatus {
      * Señala que la orden se encuentra actualmente en fase de procesamiento logístico u operativo.
      */
     IN_PROGRESS,
+
+    /**
+     * Señala que la orden se encuentra en estado finalizado.
+     */
+    FINISHED,
+
 }

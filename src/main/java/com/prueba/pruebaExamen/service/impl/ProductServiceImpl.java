@@ -9,6 +9,7 @@ import com.prueba.pruebaExamen.repository.ProductRepository;
 import com.prueba.pruebaExamen.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
+
     private final ProductRepository productRepository;
+
+    // Inyección de la clave maestra desde application.yaml
+    @Value("${admin.inventory.password}")
+    private String adminPassword;
 
     /**
      * Procesa la creación de un nuevo producto.
@@ -123,7 +129,15 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     @Transactional
-    public void delete(UUID id) {
+    public void delete(UUID id, AdminAuthRq auth) {
+        // Validación de seguridad con la clave inyectada (misma validación que en update).
+        if (auth == null || !adminPassword.equals(auth.password())) {
+            throw new ProductException(
+                    "Acceso denegado: La contraseña de inventario es incorrecta.",
+                    BusinessErrorType.UNAUTHORIZED
+            );
+        }
+
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException("El producto no existe", BusinessErrorType.NOT_FOUND));
 
@@ -140,11 +154,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Actualiza la información de un producto existente.
+     * Actualiza la información de un producto existente validando clave de administrador.
      */
     @Override
     @Transactional
-    public ProductRs update(UUID id, ProductRq request) {
+    public ProductRs update(UUID id, ProductUpdateWrapper wrapper) {
+
+        // 1. Validación de seguridad con la clave inyectada
+        if (wrapper.auth() == null || !adminPassword.equals(wrapper.auth().password())) {
+            throw new ProductException(
+                    "Acceso denegado: La contraseña de inventario es incorrecta.",
+                    BusinessErrorType.UNAUTHORIZED
+            );
+        }
+
+        ProductRq request = wrapper.productRq();
+
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductException(
                         "Producto no existente ", BusinessErrorType.NOT_FOUND

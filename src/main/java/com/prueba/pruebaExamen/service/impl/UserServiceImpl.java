@@ -1,7 +1,7 @@
 package com.prueba.pruebaExamen.service.impl;
 
 import com.prueba.pruebaExamen.dto.DtoUser;
-import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
+import com.prueba.pruebaExamen.dto.SearchUserOrdersRq;
 import com.prueba.pruebaExamen.entity.Order;
 import com.prueba.pruebaExamen.entity.User;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setAge(request.getAge());
+        user.setNumero(request.getNumero());
 
         User userSaved = userRepository.save(user);
 
@@ -76,13 +76,27 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<DtoUser> getByEmail(GetOrderByEmailRq request) {
-        return userRepository.findByEmail(request.getEmail())
-                .map(user -> List.of(toRs(user)))
-                .orElseThrow(() -> new UserException(
-                        "No se encontraron registros para el email: " + request.getEmail(),
-                        BusinessErrorType.NOT_FOUND
-                ));
+    public List<DtoUser> searchUsers(SearchUserOrdersRq request) {
+
+        // Ejecutamos la búsqueda flexible en la base de datos
+        List<User> users = userRepository.findByEmailOrNumeroOrNameContainingIgnoreCase(
+                request.getEmail(),
+                request.getNumero(),
+                request.getName()
+        );
+
+        // Si la lista viene vacía, disparamos tu excepción controlada
+        if (users.isEmpty()) {
+            throw new UserException(
+                    "No se encontraron usuarios con los datos ingresados.",
+                    BusinessErrorType.NOT_FOUND
+            );
+        }
+
+        // Mapeamos de forma limpia la lista de entidades al DTO correspondiente utilizando streams
+        return users.stream()
+                .map(this::toRs)
+                .toList();
     }
 
 
@@ -138,7 +152,7 @@ public class UserServiceImpl implements UserService {
 
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setAge(request.getAge());
+        user.setNumero(request.getNumero());
 
         User userUpdate = userRepository.save(user);
 
@@ -153,7 +167,7 @@ public class UserServiceImpl implements UserService {
         rs.setId(user.getId());
         rs.setName(user.getName());
         rs.setEmail(user.getEmail());
-        rs.setAge(user.getAge());
+        rs.setNumero(user.getNumero());
         rs.setOrders(user.getOrders() != null ?
                 user.getOrders().stream().map(o -> (Object)o).collect(Collectors.toList()) :
                 new ArrayList<>());

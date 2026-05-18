@@ -25,6 +25,16 @@ public record OrderReportRs(
         String email,
 
         /**
+         * Nombre del usuario que generó la transacción.
+         */
+        String name,
+
+        /**
+         * Numero del usuario que generó la transacción.
+         */
+        String numero,
+
+        /**
          * Estado actual de la orden dentro del flujo de negocio (CREATED, PAID, CANCELLED).
          */
         OrderStatus status,

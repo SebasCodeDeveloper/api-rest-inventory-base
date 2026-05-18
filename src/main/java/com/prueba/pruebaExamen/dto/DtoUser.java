@@ -1,9 +1,6 @@
 package com.prueba.pruebaExamen.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,9 +34,11 @@ public class DtoUser {
     /**
      * Edad del usuario. Aplica una regla de negocio para restringir el registro a mayores de edad.
      */
-    @NotNull(message = "La edad es obligatoria")
-    @Min(value = 18, message = "La edad debe ser Mayor o igual a 18")
-    private Integer age;
+    @NotBlank(message = "El número de celular es obligatorio")
+    @Pattern(
+    regexp = "^3\\d{9}$",
+    message = "El número de celular debe iniciar con 3 y tener 10 dígitos")
+    private String numero;
 
     /**
      * Lista de ordenes para la validacion de usuarios asociados a una orden
