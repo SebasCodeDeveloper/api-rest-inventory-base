@@ -59,24 +59,6 @@ public class OrderDetailServicesImpl implements OrderDetailServices {
     }
 
     /**
-     * Filtra el historial de órdenes basándose en el correo electrónico del usuario proporcionado en el request.
-     */
-    @Override
-    public List<OrderReportRs> getByEmail(GetOrderByEmailRq request) {
-        // Filtrado funcional para extraer únicamente los registros vinculados al email del cliente
-        List<OrderDetail> filteredDetails = orderDetailRepository.findAll().stream()
-                .filter(d -> d.getOrder().getUser().getEmail().equalsIgnoreCase(request.getEmail()))
-                .toList();
-
-        if (filteredDetails.isEmpty()) {
-            throw new OrderDetailException("No existen órdenes vinculadas al email: " + request.getEmail(),
-                    BusinessErrorType.NOT_FOUND);
-        }
-
-        return groupDetails(filteredDetails);
-    }
-
-    /**
      * Motor de transformación (Mapper) que convierte una lista plana de detalles JPA
      * en una estructura organizada de tipo Maestro-Detalle.
      * * @param details Lista de filas recuperadas de la tabla order_details.
@@ -96,6 +78,8 @@ public class OrderDetailServicesImpl implements OrderDetailServices {
                     return new OrderReportRs(
                             order.getId(),
                             order.getUser().getEmail(),
+                            order.getUser().getName(),
+                            order.getUser().getNumero(),
                             order.getStatus(),
                             order.getTotal(),
                             order.getCreatedAt(),

@@ -1,8 +1,10 @@
 package com.prueba.pruebaExamen.service;
 
+import com.prueba.pruebaExamen.dto.AdminAuthRq;
 import com.prueba.pruebaExamen.dto.GetProductByNameRq;
 import com.prueba.pruebaExamen.dto.ProductRq;
 import com.prueba.pruebaExamen.dto.ProductRs;
+import com.prueba.pruebaExamen.dto.ProductUpdateWrapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,16 +39,15 @@ public interface ProductService {
     /**
      * Define la operación de actualización de datos de un producto existente.
      * @param id Identificador del recurso a modificar.
-     * @param request Datos actualizados del producto.
      * @return DTO con la información persistida tras la actualización.
      */
-    ProductRs update(UUID id, ProductRq request);
+    ProductRs update(UUID id, ProductUpdateWrapper wrapper);
 
     /**
      * Define la eliminación de un prodcuto del sistema.
      * @param id Identificador único del prodcuto a remover.
      */
-    void delete(UUID id);
+    void delete(UUID id, AdminAuthRq auth);
 
     /**
      * Define la operación para recuperar el nombre de un producto .

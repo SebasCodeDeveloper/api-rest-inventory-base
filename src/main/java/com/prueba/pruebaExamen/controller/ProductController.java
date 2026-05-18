@@ -1,8 +1,10 @@
 package com.prueba.pruebaExamen.controller;
 
+import com.prueba.pruebaExamen.dto.AdminAuthRq;
 import com.prueba.pruebaExamen.dto.GetProductByNameRq;
 import com.prueba.pruebaExamen.dto.ProductRq;
 import com.prueba.pruebaExamen.dto.ProductRs;
+import com.prueba.pruebaExamen.dto.ProductUpdateWrapper;
 import com.prueba.pruebaExamen.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -61,16 +63,16 @@ public class ProductController {
      * Actualiza la información de un producto existente identificado por su UUID.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid ProductRq request) {
-        return ResponseEntity.ok(productService.update(id, request));
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody @Valid ProductUpdateWrapper wrapper) {
+        return ResponseEntity.ok(productService.update(id, wrapper));
     }
 
     /**
      * Elimina un producto por ID. Retorna 204 No Content si la operación es exitosa.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        productService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody @Valid AdminAuthRq auth) {
+        productService.delete(id, auth);
         return ResponseEntity.noContent().build();
     }
 

@@ -1,8 +1,9 @@
 package com.prueba.pruebaExamen.service;
 
-import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
+import com.prueba.pruebaExamen.dto.SearchUserOrdersRq;
 import com.prueba.pruebaExamen.dto.OrderReportRs;
 import com.prueba.pruebaExamen.dto.OrderRq;
+import com.prueba.pruebaExamen.entity.OrderStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public interface OrderService {
 
     /**
      * Define la operación de creación y persistencia de una nueva orden.
-     * @param request DTO con la información del cliente y los ítems solicitados.
+     * @param request DTO con la infaormación del cliente y los ítems solicitados.
      * @return DTO de respuesta con el resumen de la orden generada.
      */
     OrderReportRs create(OrderRq request);
@@ -26,7 +27,7 @@ public interface OrderService {
      * @param request Objeto de consulta que contiene el email del usuario.
      * @return Listado de órdenes (OrderRs) asociadas al criterio de búsqueda.
      */
-    List<OrderReportRs> getByEmail(GetOrderByEmailRq request);
+    List<OrderReportRs> getByEmail(SearchUserOrdersRq request);
 
     /**
      * Define la búsqueda de una orden específica mediante su identificador técnico.
@@ -70,5 +71,13 @@ public interface OrderService {
      * @param id Identificador única orden a remover.
      */
     void delete(UUID id);
+
+    /**
+     * Realiza la transición de estado de una orden de manera dinámica.
+     * @param id Identificador único de la orden.
+     * @param status El nuevo estado (OrderStatus) solicitado.
+     * @return DTO con la información de la orden actualizada.
+     */
+    OrderReportRs updateStatus(UUID id, OrderStatus status);
 
 }

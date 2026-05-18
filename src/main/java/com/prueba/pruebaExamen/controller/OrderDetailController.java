@@ -1,9 +1,7 @@
 package com.prueba.pruebaExamen.controller;
 
-import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
 import com.prueba.pruebaExamen.dto.OrderReportRs;
 import com.prueba.pruebaExamen.service.OrderDetailServices;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,17 +39,5 @@ public class OrderDetailController {
     public List<OrderReportRs> getById(@PathVariable UUID id) {
         return orderDetailServices.getByOrderId(id);
     }
-
-    /**
-     * Endpoint de consulta avanzada que filtra el historial de órdenes basándose en un correo electrónico.
-     * Utiliza el método POST para proteger la integridad de la consulta y manejar el cuerpo del request.
-     * @param request DTO que contiene el email del cliente a consultar.
-     * @return Listado de órdenes vinculadas al correo proporcionado, organizadas por encabezado y productos.
-     */
-    @PostMapping
-    public List<OrderReportRs> getByOrderEmail(@Valid @RequestBody GetOrderByEmailRq request ) {
-        return orderDetailServices.getByEmail(request);
-    }
-
 
 }

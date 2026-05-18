@@ -1,8 +1,9 @@
 package com.prueba.pruebaExamen.controller;
 
-import com.prueba.pruebaExamen.dto.GetOrderByEmailRq;
+import com.prueba.pruebaExamen.dto.SearchUserOrdersRq;
 import com.prueba.pruebaExamen.dto.OrderReportRs;
 import com.prueba.pruebaExamen.dto.OrderRq;
+import com.prueba.pruebaExamen.entity.OrderStatus;
 import com.prueba.pruebaExamen.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,8 @@ public class OrderController {
      * Recupera un listado de órdenes asociadas a una dirección de correo electrónico específica.
      * Utiliza un objeto de petición para asegurar la validación del formato del email antes de la consulta.
      */
-    @PostMapping("/email")
-    public ResponseEntity<List<OrderReportRs>> getByEmail(@Valid @RequestBody GetOrderByEmailRq request) {
+    @PostMapping("/search")
+    public ResponseEntity<List<OrderReportRs>> getOrdersByCriteria(@Valid @RequestBody SearchUserOrdersRq request) {
         return ResponseEntity.ok(orderService.getByEmail(request));
     }
 
@@ -95,5 +96,16 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Endpoint para el cambio rápido de estado desde la tabla principal.
+     * @param id UUID de la orden.
+     * @param status Parámetro de consulta (?status=IN_PROGRESS).
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<OrderReportRs> updateStatus(
+            @PathVariable UUID id,
+            @RequestParam OrderStatus status) {
+        return ResponseEntity.ok(orderService.updateStatus(id, status));
+    }
 
 }
