@@ -53,5 +53,10 @@ public record OrderReportRs(
          * Colección de productos asociados a esta orden específica.
          * Permite visualizar múltiples artículos bajo un mismo encabezado de orden.
          */
-        List<ProductItemRs> items
+        List<ProductItemRs> items,
+
+        /**
+         * Colección de servicios o detalles de trabajo aplicados y facturados en esta orden.
+         */
+        List<OrderJobDetailRs> jobs
 ) {}

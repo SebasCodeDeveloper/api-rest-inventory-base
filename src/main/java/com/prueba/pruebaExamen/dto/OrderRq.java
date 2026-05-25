@@ -1,9 +1,9 @@
 package com.prueba.pruebaExamen.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
@@ -23,11 +23,29 @@ public record OrderRq(
 
         /**
          * Colección de productos y cantidades que componen el pedido.
-         * La restricción @NotEmpty asegura que la transacción contenga al menos un ítem.
+         * MODIFICADO: Se remueve @NotEmpty para permitir órdenes basadas únicamente en servicios de mano de obra.
          * El uso de @Valid garantiza que cada elemento de la lista cumpla con sus propias validaciones internas.
          */
-        @NotEmpty(message = "La orden debe tener almenos un producto")
         @Valid
-        List<OrderDetailRq> items
+        List<OrderDetailRq> items,
 
-) {}
+        /**
+         * Colección opcional de tipos de trabajo o servicios de mano de obra añadidos a la orden.
+         * El uso de @Valid garantiza el análisis de las restricciones internas de precio y texto de cada trabajo.
+         */
+        @Valid
+        List<OrderJobDetailRq> jobs
+) {
+
+        /**
+         * Validación personalizada a nivel de objeto.
+         * Garantiza de forma dinámica que la orden contenga al menos un producto O al menos un trabajo.
+         * Evita que se envíen órdenes totalmente vacías al sistema.
+         */
+        @AssertTrue(message = "La orden debe contener al menos un producto o un detalle de trabajo")
+        public boolean isHasContenido() {
+                boolean tieneProductos = items != null && !items.isEmpty();
+                boolean tieneTrabajos = jobs != null && !jobs.isEmpty();
+                return tieneProductos || tieneTrabajos;
+        }
+}

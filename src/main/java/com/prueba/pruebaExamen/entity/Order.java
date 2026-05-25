@@ -23,7 +23,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @Entity
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,property = "id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "orders")
 public class Order {
 
@@ -41,13 +41,19 @@ public class Order {
     private User user;
 
     /**
-     * Relación uno a muchos con los detalles de la orden.
+     * Relación uno a muchos con los detalles de la orden (Productos).
      * 'mappedBy = "order"' indica que la relación la controla el campo 'order' en OrderDetail.
      * 'cascade = CascadeType.ALL' asegura que al guardar una orden, sus detalles se guardan automáticamente.
      */
-
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderDetail> details = new ArrayList<>() ;
+    private List<OrderDetail> details = new ArrayList<>();
+
+    /**
+     * Relación uno a muchos con los detalles de mano de obra o tipo de trabajo realizado.
+     * Mantiene la misma consistencia y cascading que el desglose de productos.
+     */
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderJobDetail> jobDetails = new ArrayList<>();
 
     /**
      * Monto total de la orden.
@@ -80,13 +86,21 @@ public class Order {
     }
 
     /**
-     * Calcula el total sumando los subtotales de todos los detalles.
+     * Calcula el total sumando los subtotales de todos los detalles de productos
+     * más los costos de los tipos de trabajo añadidos en caliente.
      */
     public void calculateTotal() {
-        this.total = this.details.stream()
+        BigDecimal totalProducts = this.details.stream()
                 .map(OrderDetail::getSubtotal)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalJobs = this.jobDetails.stream()
+                .map(OrderJobDetail::getPrice)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        this.total = totalProducts.add(totalJobs);
     }
 
     /**
@@ -97,6 +111,16 @@ public class Order {
     public void addDetail(OrderDetail detail) {
         detail.setOrder(this);
         this.details.add(detail);
+    }
+
+    /**
+     * Establece el vínculo bidireccional entre la orden principal y un desglose de tipo de trabajo realizado.
+     * Asigna la referencia de la orden actual al detalle de trabajo recibido y lo integra
+     * en el listado operacional para el cálculo financiero masivo.
+     */
+    public void addJobDetail(OrderJobDetail jobDetail) {
+        jobDetail.setOrder(this);
+        this.jobDetails.add(jobDetail);
     }
 
 }
