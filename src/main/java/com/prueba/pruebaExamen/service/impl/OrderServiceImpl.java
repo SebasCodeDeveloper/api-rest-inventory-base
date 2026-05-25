@@ -5,6 +5,7 @@ import com.prueba.pruebaExamen.entity.*;
 import com.prueba.pruebaExamen.exception.BusinessErrorType;
 import com.prueba.pruebaExamen.exception.OrderDetailException;
 import com.prueba.pruebaExamen.exception.OrderException;
+import com.prueba.pruebaExamen.repository.JobCatalogRepository;
 import com.prueba.pruebaExamen.repository.OrderRepository;
 import com.prueba.pruebaExamen.repository.ProductRepository;
 import com.prueba.pruebaExamen.repository.UserRepository;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -30,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final JobCatalogRepository jobCatalogRepository;
 
     /**
      * Procesa la creación de una orden, validando stock y calculando importes financieros.
@@ -47,8 +51,11 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setUser(user);
 
-        // Procesamiento iterativo de los ítems solicitados
-        for (OrderDetailRq item : request.items()) {
+        // Lista segura para evitar nulos si la orden es de pura mano de obra desde Postman
+        List<OrderDetailRq> itemsSeguros = request.items() != null ? request.items() : List.of();
+
+        // Procesamiento iterativo de los ítems solicitados de manera segura
+        for (OrderDetailRq item : itemsSeguros) {
 
             // Verificación de existencia del producto en catálogo
             Product product = productRepository.findByName(item.productName())
@@ -77,7 +84,34 @@ public class OrderServiceImpl implements OrderService {
             order.addDetail(detail);
         }
 
-        // Ejecución de lógica de negocio para consolidar el total de la compra
+        // LÓGICA INTELIGENTE - Procesamiento y auto-aprendizaje de tipos de trabajo
+        if (request.jobs() != null) {
+            for (OrderJobDetailRq jobReq : request.jobs()) {
+                String nombreLimpio = jobReq.jobName().trim();
+
+                // Buscamos de manera insensible a mayúsculas/minúsculas para evitar duplicidades
+                Optional<JobCatalog> existingJob = jobCatalogRepository.findByNameIgnoreCase(nombreLimpio);
+
+                if (existingJob.isEmpty()) {
+                    // El sistema aprende un nuevo tipo de trabajo de forma transparente para futuros autocompletados
+                    JobCatalog newCatalogItem = new JobCatalog();
+                    newCatalogItem.setName(nombreLimpio);
+                    newCatalogItem.setBasePrice(jobReq.price()); // Se almacena este precio inicial como tarifa base sugerida
+
+                    jobCatalogRepository.save(newCatalogItem);
+                }
+
+                // Estructuramos el detalle específico para esta orden respetando el precio cobrado en caliente
+                OrderJobDetail jobDetail = new OrderJobDetail();
+                jobDetail.setJobName(nombreLimpio);
+                jobDetail.setPrice(jobReq.price());
+
+                // Vinculación bidireccional quirúrgica
+                order.addJobDetail(jobDetail);
+            }
+        }
+
+        // Ejecución de lógica de negocio para consolidar el total de la compra (Productos + Trabajos)
         order.calculateTotal();
 
         // Persistencia de la orden y retorno del DTO de respuesta
@@ -195,6 +229,8 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * Ejecuta la anulación de una orden y realiza la reversión de stock al inventario.
+     * Se añade un control preventivo de nulos mediante listas seguras
+     * para admitir actualizaciones que consistan únicamente en mano de obra.
      */
     @Override
     public OrderReportRs update(UUID id, OrderReportRs request) {
@@ -211,6 +247,14 @@ public class OrderServiceImpl implements OrderService {
                     BusinessErrorType.UNPROCESSABLE);
         }
 
+        // Evitar que mediante la edición dejen la orden totalmente vacía (sin nada de nada)
+        boolean tieneProductos = request.items() != null && !request.items().isEmpty();
+        boolean tieneTrabajos = request.jobs() != null && !request.jobs().isEmpty();
+        if (!tieneProductos && !tieneTrabajos) {
+            throw new OrderException("La orden modificada debe contener al menos un producto o un detalle de trabajo",
+                    BusinessErrorType.UNPROCESSABLE);
+        }
+
         //Si el email en el request es distinto al de la orden actual, buscamos el nuevo usuario
         if (!order.getUser().getEmail().equals(request.email())) {
             User newUser = userRepository.findByEmail(request.email())
@@ -219,19 +263,27 @@ public class OrderServiceImpl implements OrderService {
             order.setUser(newUser);
         }
 
-        // Devolver el inventario.
+        // Devolver el inventario de productos actuales de forma segura (añadido control null)
         for (OrderDetail detail : order.getDetails()) {
             Product product = detail.getProduct();
-            product.setStock(product.getStock() + detail.getQuantity());
+            if (product != null) {
+                product.setStock(product.getStock() + detail.getQuantity());
+            }
         }
         order.getDetails().clear();
 
-        for (ProductItemRs newItem : request.items()) {
+        // Limpiamos los trabajos anteriores asociados de la orden para reescribirlos
+        order.getJobDetails().clear();
+
+        // Control preventivo para evitar NullPointerException si eliminaron todos los productos de la orden
+        List<ProductItemRs> itemsSeguros = request.items() != null ? request.items() : List.of();
+
+        for (ProductItemRs newItem : itemsSeguros) {
             Product product = productRepository.findByName(newItem.productName())
                     .orElseThrow(() -> new OrderException("Producto no encontrado: " + newItem.productName(),
                             BusinessErrorType.NOT_FOUND));
 
-            // Validacion  de  stock disponible
+            // Validacion de stock disponible
             if (product.getStock() < newItem.quantity()) {
                 throw new OrderException("Stock insuficiente para: " + product.getName() +
                         " (Disponible: " + product.getStock() + ")",
@@ -247,11 +299,29 @@ public class OrderServiceImpl implements OrderService {
             detail.setQuantity(newItem.quantity());
             detail.setUnitPrice(product.getPrice());
             detail.setSubtotal(subtotal);
-
-            // Vincular a la orden
             order.addDetail(detail);
         }
 
+        if (request.jobs() != null) {
+            for (OrderJobDetailRs jobRs : request.jobs()) {
+                String nombreLimpio = jobRs.jobName().trim();
+
+                Optional<JobCatalog> existingJob = jobCatalogRepository.findByNameIgnoreCase(nombreLimpio);
+
+                if (existingJob.isEmpty()) {
+                    JobCatalog newCatalogItem = new JobCatalog();
+                    newCatalogItem.setName(nombreLimpio);
+                    newCatalogItem.setBasePrice(jobRs.price());
+                    jobCatalogRepository.save(newCatalogItem);
+                }
+
+                OrderJobDetail jobDetail = new OrderJobDetail();
+                jobDetail.setJobName(nombreLimpio);
+                jobDetail.setPrice(jobRs.price());
+
+                order.addJobDetail(jobDetail);
+            }
+        }
 
         order.calculateTotal();
         Order updatedOrder = orderRepository.save(order);
@@ -260,7 +330,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * Realiza el borrado de la orden y devolviendo los productos a su posicion  anterios .
+     * Realiza el borrado de la orden y devolviendo los productos a su posicion anterios .
      */
     @Override
     public void delete(UUID id) {
@@ -293,16 +363,16 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderReportRs updateStatus(UUID id, OrderStatus newStatus) {
-        // 1. Buscamos la orden (usando tu lógica de excepciones)
+        // Buscamos la orden (usando tu lógica de excepciones)
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderException("Orden no encontrada", BusinessErrorType.NOT_FOUND));
 
-        // 2. Si el estado es el mismo, devolvemos lo mismo (Idempotencia)
+        // Si el estado es el mismo, devolvemos lo mismo (Idempotencia)
         if (order.getStatus() == newStatus) {
             return mapToResponse(order);
         }
 
-        // 3. ORQUESTADOR SEGURO: Derivamos a tus funciones originales
+        // Derivamos a tus funciones originales
         // Esto garantiza que NO dañamos la lógica de stock ni de bloqueos.
         return switch (newStatus) {
             case PAID -> this.pay(id);      // Ejecuta tu lógica de pago actual
@@ -338,9 +408,16 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .toList();
 
+        // Mapeo funcional de los tipos de trabajo ejecutados en la orden para el Response final
+        List<OrderJobDetailRs> jobList = new ArrayList<>();
+        if (order.getJobDetails() != null) {
+            jobList = order.getJobDetails().stream()
+                    .map(job -> new OrderJobDetailRs(job.getJobName(), job.getPrice()))
+                    .toList();
+        }
+
         // Manejo preventivo si el usuario es nulo tras una cancelación
         String userEmail = (order.getUser() != null) ? order.getUser().getEmail() : "Usuario Liberado";
-
 
         assert order.getUser() != null;
         return new OrderReportRs(
@@ -351,7 +428,8 @@ public class OrderServiceImpl implements OrderService {
                 order.getStatus(),
                 order.getTotal(),
                 order.getCreatedAt(),
-                detailList
+                detailList,
+                jobList
         );
     }
 }
